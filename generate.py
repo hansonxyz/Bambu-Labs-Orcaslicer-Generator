@@ -57,7 +57,7 @@ ENABLED_PRINTERS = {
     "P1S": False,    # Bambu Lab P1S (enclosed CoreXY, no lidar)
     "P1P": False,    # Bambu Lab P1P (open-frame CoreXY, no enclosure)
     "A1":  False,    # Bambu Lab A1 (i3 gantry, 256mm bed)
-    "A1M": True,     # Bambu Lab A1 Mini (i3 gantry, 180mm bed)
+    "A1M": False,    # Bambu Lab A1 Mini (i3 gantry, 180mm bed)
 }
 
 # =============================================================================
@@ -68,7 +68,7 @@ ENABLED_PRINTERS = {
 
 OPTIONAL_FILAMENTS = {
     "PLA Silk": True,    # Shimmer PLA - needs own process profile (low accel)
-    "PLA Wood": True,    # Wood-fill PLA - uses PLA process, low volumetric speed
+    "PLA Wood": False,   # Wood-fill PLA - uses PLA process, low volumetric speed
     "PLA-CF":   False,   # Carbon fiber PLA - uses PLA process, needs hardened nozzle
     "ASA":      False,   # UV-resistant ABS alt - uses PETG/ABS process, enclosure required
     "TPU":      False,   # Flexible - needs own process profile (very slow)
@@ -92,8 +92,20 @@ OPTIONAL_FILAMENTS = {
 #
 #  If you just want to use these profiles on your printer, the only sections
 #  you need to touch are ENABLED_PRINTERS and OPTIONAL_FILAMENTS above.
+#  Alternatively, create a config.json in this directory to override those
+#  values without modifying the script.
 #
 # #############################################################################
+
+# Load config.json overrides if present
+_CONFIG_FILE = Path(__file__).parent / "config.json"
+if _CONFIG_FILE.exists():
+    with open(_CONFIG_FILE, "r", encoding="utf-8") as _f:
+        _config = json.load(_f)
+    if "ENABLED_PRINTERS" in _config:
+        ENABLED_PRINTERS.update(_config["ENABLED_PRINTERS"])
+    if "OPTIONAL_FILAMENTS" in _config:
+        OPTIONAL_FILAMENTS.update(_config["OPTIONAL_FILAMENTS"])
 
 
 # =============================================================================
