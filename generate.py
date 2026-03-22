@@ -388,11 +388,14 @@ ORCA_PROFILE_VERSION = "1.10.0.35"
 #   are largely immune.
 #
 # PVA/BVOH as support interface:
-#   When using dissolvable support, set the support interface filament to
-#   your PVA or BVOH slot in OrcaSlicer (e.g. filament slot 4). Use PVA
-#   only for the interface layers, NOT the bulk support structure - bulk
-#   support should use your primary PLA to save expensive PVA material.
-#   The PLA+PETG+PVA MM profile has this pre-configured (interface=slot 4).
+#   PVA and BVOH are ONLY for support interface layers - never use them
+#   for the bulk support structure or as a build plate contact material.
+#   Always use PLA for the support base and only PVA/BVOH for the
+#   interface layers that touch the model. This saves expensive material
+#   and avoids adhesion issues.
+#   In OrcaSlicer: set the support interface filament to your PVA/BVOH
+#   slot (e.g. filament slot 4). Leave the support filament as your
+#   primary PLA. The PLA+PETG+PVA MM profile has this pre-configured.
 #
 # Brim:
 #   Disabled by default. Enable manually for parts with very small bed
@@ -405,9 +408,16 @@ ORCA_PROFILE_VERSION = "1.10.0.35"
 #   Adds significant time - only use where the top surface matters.
 #
 # Build plate type:
-#   Plate temperatures are set per-filament-profile. If you switch plates,
-#   the correct temperature is applied automatically. No manual adjustment
-#   needed.
+#   Plate temperatures are set per-filament-profile and vary by plate type.
+#   PEI plates (textured, smooth, engineering) and SuperTack use 48°C on
+#   enclosed printers, 57°C on open-air. Cool plate uses 35°C on all
+#   printers (it has a low-temp coating that PLA softens on above 55°C).
+#   Switching plates in OrcaSlicer applies the correct temp automatically.
+#
+# Part removal:
+#   PEI plates: wait for the bed to cool before removing parts. Pulling
+#   parts off hot PEI can damage the coating.
+#   SuperTack: parts release naturally as the plate cools. No force needed.
 #
 # Elephant foot compensation:
 #   Set to 0.15mm globally. If a first layer is too tight or too loose,
@@ -447,7 +457,8 @@ OPTIONAL_FILAMENTS = {
     "PLA-CF":   False,   # Carbon fiber PLA - uses PLA process, needs hardened nozzle
     "ASA":      False,   # UV-resistant ABS alt - uses PETG/ABS process, enclosure required
     "TPU":      False,   # Flexible - needs own process profile (very slow)
-    "BVOH":     False,   # Dissolvable support - better than PVA, works with PETG
+    "PVA":      True,    # Dissolvable support interface - requires AMS
+    "BVOH":     False,   # Dissolvable support - better than PVA, works with PETG, requires AMS
 }
 
 # =============================================================================
@@ -1363,19 +1374,23 @@ FILAMENT_B_PVA = {
     "nozzle_temperature": ["220"],
     "nozzle_temperature_initial_layer": ["215"],
     "nozzle_temperature_range_high": ["250"],
-    "nozzle_temperature_range_low": ["210"],
-    "cool_plate_temp": ["48"],
-    "cool_plate_temp_initial_layer": ["48"],
-    "eng_plate_temp": ["48"],
-    "eng_plate_temp_initial_layer": ["48"],
-    "hot_plate_temp": ["48"],
-    "hot_plate_temp_initial_layer": ["48"],
-    "supertack_plate_temp": ["48"],
-    "supertack_plate_temp_initial_layer": ["48"],
-    "textured_cool_plate_temp": ["48"],
-    "textured_cool_plate_temp_initial_layer": ["48"],
-    "textured_plate_temp": ["48"],
-    "textured_plate_temp_initial_layer": ["48"],
+    "nozzle_temperature_range_low": ["190"],
+    # Plate temps: cool plate is low-temp coating (35°C), everything else uses
+    # PEI/SuperTack surfaces that work at 48-57°C. Printer overrides adjust
+    # the non-cool plates based on enclosure (48 enclosed, 57 open-air).
+    # Cool plate stays at 35°C on all printers - higher temps soften PLA on this coating.
+    "cool_plate_temp": ["35"],
+    "cool_plate_temp_initial_layer": ["35"],
+    "eng_plate_temp": ["55"],
+    "eng_plate_temp_initial_layer": ["55"],
+    "hot_plate_temp": ["55"],
+    "hot_plate_temp_initial_layer": ["55"],
+    "supertack_plate_temp": ["55"],
+    "supertack_plate_temp_initial_layer": ["55"],
+    "textured_cool_plate_temp": ["50"],
+    "textured_cool_plate_temp_initial_layer": ["50"],
+    "textured_plate_temp": ["55"],
+    "textured_plate_temp_initial_layer": ["55"],
     "temperature_vitrification": ["55"],
     # Fan
     "activate_air_filtration": ["1"],
@@ -1428,19 +1443,19 @@ FILAMENT_B_BVOH = {
     "nozzle_temperature_initial_layer": ["210"],
     "nozzle_temperature_range_high": ["230"],
     "nozzle_temperature_range_low": ["200"],
-    # Plate temps - same as PVA (PLA-like temps)
-    "cool_plate_temp": ["48"],
-    "cool_plate_temp_initial_layer": ["48"],
-    "eng_plate_temp": ["48"],
-    "eng_plate_temp_initial_layer": ["48"],
-    "hot_plate_temp": ["48"],
-    "hot_plate_temp_initial_layer": ["48"],
-    "supertack_plate_temp": ["48"],
-    "supertack_plate_temp_initial_layer": ["48"],
-    "textured_cool_plate_temp": ["48"],
-    "textured_cool_plate_temp_initial_layer": ["48"],
-    "textured_plate_temp": ["48"],
-    "textured_plate_temp_initial_layer": ["48"],
+    # Plate temps - same structure as PLA (PLA-like material)
+    "cool_plate_temp": ["35"],
+    "cool_plate_temp_initial_layer": ["35"],
+    "eng_plate_temp": ["55"],
+    "eng_plate_temp_initial_layer": ["55"],
+    "hot_plate_temp": ["55"],
+    "hot_plate_temp_initial_layer": ["55"],
+    "supertack_plate_temp": ["55"],
+    "supertack_plate_temp_initial_layer": ["55"],
+    "textured_cool_plate_temp": ["50"],
+    "textured_cool_plate_temp_initial_layer": ["50"],
+    "textured_plate_temp": ["55"],
+    "textured_plate_temp_initial_layer": ["55"],
     "temperature_vitrification": ["55"],
     # Fan - aggressive cooling like PVA
     "activate_air_filtration": ["1"],
@@ -1636,7 +1651,6 @@ _CORE_FILAMENTS = {
     "B PLA":      (FILAMENT_B_PLA, None, None),
     "B PETG":     (FILAMENT_B_PETG, None, None),
     "B ABS":      (FILAMENT_B_ABS, None, [k for k, v in PRINTER_ENCLOSED.items() if v]),
-    "B PVA":      (FILAMENT_B_PVA, None, None),
 }
 
 _OPTIONAL_FILAMENTS = {
@@ -1646,6 +1660,7 @@ _OPTIONAL_FILAMENTS = {
     "B PLA-CF":   (FILAMENT_B_PLA_CF_OVERRIDES, "B PLA", None, "PLA-CF"),
     "B ASA":      (FILAMENT_B_ASA, None, [k for k, v in PRINTER_ENCLOSED.items() if v], "ASA"),
     "B TPU":      (FILAMENT_B_TPU, None, None, "TPU"),
+    "B PVA":      (FILAMENT_B_PVA, None, None, "PVA"),
     "B BVOH":     (FILAMENT_B_BVOH, None, None, "BVOH"),
 }
 
@@ -2155,8 +2170,8 @@ def generate_filament_profiles(dry_run: bool = False):
                 except (ValueError, IndexError):
                     pass
 
-            ALL_PLATE_KEYS = [
-                "cool_plate_temp", "cool_plate_temp_initial_layer",
+            # PEI/SuperTack plate keys (NOT cool plate - that's a different coating)
+            PEI_PLATE_KEYS = [
                 "eng_plate_temp", "eng_plate_temp_initial_layer",
                 "hot_plate_temp", "hot_plate_temp_initial_layer",
                 "supertack_plate_temp", "supertack_plate_temp_initial_layer",
@@ -2164,14 +2179,16 @@ def generate_filament_profiles(dry_run: bool = False):
                 "textured_plate_temp", "textured_plate_temp_initial_layer",
             ]
 
-            # Plate temps for PLA-based filaments depend on enclosure
-            # Enclosed printers: 48°C (enclosure traps heat)
-            # Open-air printers: 57°C (needs more heat to compensate)
+            # Plate temps for PLA-based filaments depend on enclosure.
+            # Only override PEI/SuperTack plates - cool plate stays at 35°C always
+            # (it's a low-temp coating, PLA softens above 55°C on this surface).
+            # Enclosed printers: 48°C (enclosure traps heat, less needed)
+            # Open-air printers: 57°C (needs more heat to compensate for ambient loss)
             fil_type = profile.get("filament_type", [""])[0]
             if fil_type in ("PLA", "PVA"):
                 is_enclosed = PRINTER_ENCLOSED.get(printer_key, False)
                 plate_temp = "48" if is_enclosed else "57"
-                for plate_key in ALL_PLATE_KEYS:
+                for plate_key in PEI_PLATE_KEYS:
                     profile[plate_key] = [plate_temp]
 
             if dry_run:
