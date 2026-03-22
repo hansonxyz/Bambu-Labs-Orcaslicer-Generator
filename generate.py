@@ -797,27 +797,28 @@ PLA_STANDARD = {
 }
 
 # --- PLA Fast ---
-# Balanced speed: visually accurate (good benchy) but meaningfully faster than standard.
-# Outer wall gets extra conservative treatment since it's the most visible surface.
+# Near-stock speeds with targeted conservative reductions where it matters.
+# Outer wall is the main quality lever - kept at 75% of stock.
+# Inner wall and solid infill match stock (hidden, no visual impact).
 # Uses crosshatch infill on all printers to reduce vibration at speed.
 PLA_FAST = {
-    "outer_wall_speed": "100",       # 50% of BBL - most impactful for visual quality
-    "inner_wall_speed": "200",       # 67% of BBL - hidden, can be fast
-    "sparse_infill_speed": "175",    # 65% of BBL - slowed for vibration
-    "internal_solid_infill_speed": "175",  # matches infill
-    "gap_infill_speed": "150",       # between walls, quality matters
-    "top_surface_speed": "120",      # visible surface, moderate
-    "support_speed": "120",          # faster than standard
-    "travel_speed": "350",           # 70% of BBL
-    # Acceleration - outer wall halved from standard for surface quality
-    "outer_wall_acceleration": "5000",
-    "top_surface_acceleration": "2500",
-    "internal_solid_infill_acceleration": "3000",
-    "travel_acceleration": "4000",
+    "outer_wall_speed": "150",       # 75% of BBL 200 - biggest visual impact
+    "inner_wall_speed": "300",       # match stock - hidden, no visual impact
+    "sparse_infill_speed": "200",    # 74% of BBL 270 - reduced for vibration
+    "internal_solid_infill_speed": "250",  # match stock
+    "gap_infill_speed": "200",       # 80% of BBL 250
+    "top_surface_speed": "175",      # 88% of BBL 200 - visible, slight reduction
+    "support_speed": "150",          # match stock
+    "travel_speed": "350",           # 70% of BBL 500 - conservative travel
+    # Acceleration - match or stay below stock, never exceed
+    "outer_wall_acceleration": "5000",   # match stock
+    "top_surface_acceleration": "2000",  # match stock
+    "internal_solid_infill_acceleration": "5000",
+    "travel_acceleration": "5000",
     # Crosshatch on all printers for PLA Fast - less vibration than gyroid at speed
     "sparse_infill_pattern": "crosshatch",
     "sparse_infill_density": "15%",
-    "sparse_infill_acceleration": "3000",
+    "sparse_infill_acceleration": "5000",
     # Layer
     "layer_height": "0.20",
     # Shells - thinner than standard, faster print
