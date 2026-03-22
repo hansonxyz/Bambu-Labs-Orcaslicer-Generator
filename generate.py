@@ -291,8 +291,21 @@ ORCA_CONF_PATH = ORCA_DIR / "OrcaSlicer.conf"
 BACKUP_DIR = Path(__file__).parent / "backups"
 ORCA_PROFILE_VERSION = "1.10.0.35"
 
+
+# #############################################################################
+#
+#  ***** USER CONFIGURATION *****
+#
+#  These are the only two sections you need to edit:
+#  1. ENABLED_PRINTERS - turn on the printers you own
+#  2. OPTIONAL_FILAMENTS - turn on the specialty filaments you use
+#
+#  Everything else is handled by the generator.
+#
+# #############################################################################
+
 # =============================================================================
-# USER-MODIFIABLE: ENABLED PRINTERS
+# ENABLED PRINTERS
 # Toggle which printers to generate profiles for.
 # Set to True to enable, False to disable.
 # =============================================================================
@@ -460,6 +473,26 @@ OPTIONAL_FILAMENTS = {
     "PVA":      True,    # Dissolvable support interface - requires AMS
     "BVOH":     False,   # Dissolvable support - better than PVA, works with PETG, requires AMS
 }
+
+
+# #############################################################################
+#
+#  ***** END OF USER CONFIGURATION *****
+#
+#  Everything below this line is the generator engine itself. These are the
+#  researched and tested values, scaling rules, gcode handling, and generation
+#  logic that produce the output profiles.
+#
+#  You should not need to modify anything below unless you are:
+#  - Forking this project to change the baseline print philosophy
+#  - Adding support for a new printer or filament type
+#  - Fixing a bug in the generation logic
+#
+#  If you just want to use these profiles on your printer, the only sections
+#  you need to touch are ENABLED_PRINTERS and OPTIONAL_FILAMENTS above.
+#
+# #############################################################################
+
 
 # =============================================================================
 # PRINTERS
