@@ -19,15 +19,15 @@ All profiles inherit from Bambu Lab's system baselines and only store overrides,
 
 All current Bambu Lab printers are supported. Enable the ones you own:
 
-| Printer | Type | Enclosure | Default |
-|---------|------|-----------|---------|
-| X1 Carbon | CoreXY | Yes | Enabled |
-| X1 | CoreXY | Yes | Disabled |
-| X1E | CoreXY | Yes | Disabled |
-| P1S | CoreXY | Yes | Disabled |
-| P1P | CoreXY | No | Disabled |
-| A1 | i3 gantry | No | Disabled |
-| A1 Mini | i3 gantry | No | Enabled |
+| Printer | Type | Enclosure |
+|---------|------|-----------|
+| X1 Carbon | CoreXY | Yes |
+| X1 | CoreXY | Yes |
+| X1E | CoreXY | Yes |
+| P1S | CoreXY | Yes |
+| P1P | CoreXY | No |
+| A1 | i3 gantry | No |
+| A1 Mini | i3 gantry | No |
 
 Each printer supports 0.2mm, 0.4mm, 0.6mm, and 0.8mm nozzle sizes.
 
