@@ -6,8 +6,10 @@ Generates process profiles, machine profiles, and filament profiles for
 Brian's Bambu Lab X1 Carbon (X1C) and A1 Mini (A1M) printers across
 0.2/0.4/0.6/0.8mm nozzle sizes and 8 material modes.
 
-Outputs: 8 machine profiles, 64 process profiles, ~11 filament profiles.
+Outputs: 8 machine profiles, 64 process profiles, ~13 filament profiles.
 Run `python generate.py` to backup + regenerate everything.
+
+Also patches OrcaSlicer.conf for flush multiplier (0.85) and printer names.
 
 BASELINE PHILOSOPHY
 -------------------
@@ -16,17 +18,23 @@ override strategy. The guiding principle is "if it works at 300mm/s it works
 even better at 90mm/s." We trade speed for reliability and universal
 compatibility across all PLA brands and irregular object geometries.
 
-- Slow first layer (25mm/s, 75 accel) for bed adhesion reliability
+- Slow first layer (20mm/s speed, 25mm/s infill, 75 accel) for bed adhesion
 - Wider line widths (105% outer, 112% inner/infill) for strength and gap filling
+- Wall print order: inner/outer/inner (sandwich mode for best dimensional accuracy)
 - Seam on back of model (less visible than BBL's default "aligned")
 - No brim by default (enabled per-project)
 - Detect thin walls always on (BBL leaves this off, skipping thin features)
+- Elephant foot compensation 0.15mm (BBL A1M default was 0, corrected)
 - Support pre-configured but disabled (consistent settings when user enables)
 - Support on build plate only (interior support via manual painting)
 - Reduce crossing walls (less stringing)
 - Gyroid infill at 10% on X1C (strongest per material, low accel to absorb shaking)
 - Crosshatch infill at 15% on A1M (less violent direction changes for gantry arm)
 - Ironing pre-configured but not enabled (ready for per-project use)
+- Flush into infill enabled (redirects purge into infill to reduce waste)
+- Shell thickness targets: top 1.0mm / bottom 0.8mm (PLA/Silk/Delicate/MM)
+                           top 0.8mm / bottom 0.6mm (PLA Fast, PETG)
+  Layers calculated dynamically from targets, minimum 2 layers always (except Draft)
 
 PRINTER VARIANTS: X1C vs A1M
 -----------------------------
@@ -36,11 +44,13 @@ This fundamentally limits what the printer can handle.
 - A1M max print speed hard cap: 150mm/s (including travel)
 - A1M max acceleration hard cap: 5000 mm/s²
 - A1M infill: crosshatch instead of gyroid (less violent, gentler on gantry)
-- A1M infill accel: 3000 (capped, crosshatch is gentler but still cap it)
+- A1M infill accel: 3000 (capped below 5000 for stability on small parts)
 - A1M first layer: hard cap at 16/20 mm/s (speed/infill) for bed adhesion
-- A1M filament retraction: +0.1mm over X1C baseline (compensate for bowden-like path)
-- A1M z-offset gcode: same as X1C (-0.04 textured PEI, -0.02 everything else)
-- A1M supertack plate: 60°C for PLA (vs 55 on X1C, no enclosure heat buildup)
+- A1M Delicate mode: accel cap 1500, travel cap 60, speeds 35% slower than base
+- A1M filament retraction: +0.1mm over X1C baseline
+- A1M plate temps for PLA: 57°C across all plates (X1C: 48°C, enclosure traps heat)
+- Both printers: z-offset gcode (-0.04 textured PEI, -0.02 everything else)
+- Both printers: custom gcode bundled as JSON files (single source of truth)
 
 MATERIAL MODES
 --------------
@@ -51,13 +61,13 @@ B PLA (default standard):
   - Conservative speeds: 60 outer wall, 90 inner wall, 65 infill
   - High outer wall accel (10000) for Bambu input shaping on visible surfaces
   - Works reliably across all PLA brands including cheap ones
-  - 2 walls, gyroid 10% (X1C) / crosshatch 15% (A1M)
+  - 2 walls, top 1.0mm / bottom 0.8mm shell targets
 
 B PLA Fast:
   - 75% of BBL baseline speeds (150 outer, 225 inner, 200 infill)
   - "We don't need to go 120mph in an 80" - slightly below max for reliability
   - Used for on-site A1M prototyping where print time matters but failures are costly
-  - A1M travel: 525mm/s (75% of A1M's 700 baseline), capped to 150 by A1M cap
+  - Thinner shells: top 0.8mm / bottom 0.6mm
 
 B PETG ABS:
   - All speeds 45mm/s - Brian's tested sweet spot for PETG
@@ -65,6 +75,8 @@ B PETG ABS:
   - All acceleration capped at 2500
   - Alternate extra wall for PETG's weaker inter-layer bonding
   - Overhang speeds all 30mm/s (PETG droops more)
+  - Thinner shells: top 0.8mm / bottom 0.6mm
+  - 0.8mm nozzle: 1 wall + alternate (already thick enough)
   - Primary profile for 0.6mm nozzle functional prints on portable A1M
 
 B PLA Silk:
@@ -76,9 +88,10 @@ B PLA Silk:
 
 B PLA Draft:
   - As fast as the printer allows: 125mm/s everything
-  - Single wall, 1 bottom layer, 0.24mm layer height (tallest for 0.4 nozzle)
+  - Single wall + alternate, 1 bottom layer, max layer height for nozzle
   - Just need to see what the shape looks like in 3D, nothing else matters
   - Tree support for easy removal, cubic infill at 7%
+  - 0.2mm nozzle exception: 2 walls, no alternate, 2 top/bottom layers
 
 B PLA Delicate:
   - Ultra-conservative for small intricate parts (D&D minis, etc)
@@ -95,7 +108,8 @@ B PLA MM (Multi-Material):
   - Intentionally conservative: colors bleeding, materials not sticking, prime tower
     issues all improve with slower speeds
   - Flush into infill (saves material) but NOT into support (needs clean surfaces)
-  - 3 walls for color separation
+  - Dynamic wall count: minimum 1.0mm wall thickness target (3 walls on 0.4mm,
+    2 walls on 0.6/0.8mm nozzle where 2 walls already exceeds 1mm)
 
 B PLA+PETG+PVA MM:
   - Most conservative profile: PLA and PETG don't naturally adhere
@@ -103,36 +117,48 @@ B PLA+PETG+PVA MM:
   - Zero support z-distance so PVA prints directly against model surface
   - Concentric support interface with zero spacing (solid PVA interface layer)
   - Very slow speeds (40-55mm/s) for precise multi-material deposition
+  - Same 1.0mm minimum wall thickness target as PLA MM
 
 NOZZLE SCALING
 --------------
-- Layer height: 50% of nozzle diameter (draft: 60%, PVA MM: 45%)
-- Wall loops: +2 on 0.2mm nozzle to maintain minimum 0.84mm wall thickness
+- Layer height: 50% of nozzle diameter (draft: ~60%, PVA MM: ~45%)
+- Wall loops: +2 on 0.2mm nozzle to maintain minimum wall thickness
+  (or dynamically calculated from min_wall_thickness target for MM profiles)
 - Speed: 0.9x at 0.6mm, 0.85x at 0.8mm (larger bead = more material per second)
 - Acceleration: 0.95x at 0.6mm, 0.9x at 0.8mm (larger bead = more ringing)
 - Support z-distance: scales with layer height
+- PETG 0.8mm nozzle: 1 wall + alternate extra wall (already exceeds thickness min)
+- Draft 0.2mm nozzle: 2 walls, no alternate, 2 top/bottom layers
 
 FILAMENT PROFILES
 -----------------
 - Generated per-printer (B PLA, B PLA A1M, etc)
-- ABS is X1C-only (needs enclosure)
-- PVA available on both printers
+- Materials: PLA, PETG, ABS (X1C only), PVA, BVOH, PLA Silk, PLA Wood
 - A1M variants get +0.1mm retraction length
-- A1M PLA/Silk/Wood/PVA supertack plate: 60°C (X1C: 55°C, enclosure traps heat)
-- PLA plate temps corrected from old 48-everywhere to proper per-plate values:
-    Cool plate 40/45°C, Textured 55-58°C, Engineering/Hot/Supertack 55-60°C
-- ABS supertack fixed from erroneous 35°C to correct 90°C
+- X1C PLA plate temps: 48°C across all plate types (enclosure traps heat)
+- A1M PLA plate temps: 57°C across all plate types (open air needs more heat)
+- ABS supertack: 90°C
+- PVA first layer: 215°C (lower than regular 220 to reduce stringing/degradation)
+- PLA Wood: max volumetric 2 mm³/s, first layer 210°C (wood particles clog at high temp)
+- PLA Silk: first layer 225°C (lower than regular 232°C to reduce globbing)
+- BVOH: 210°C, 2.5 mm³/s volumetric, compatible with both PLA and PETG unlike PVA
 
 MACHINE PROFILES
 ----------------
-- Brian X1C 0.2/0.4/0.6/0.8: inherit BBL X1C + Brian's custom gcode
-- Brian A1M 0.2/0.4/0.6/0.8: inherit BBL A1M + patched z-offset gcode
-- X1C gcode: custom start/end/toolchange/layer_change with z-offset logic
-- A1M gcode: BBL base with patched z-offset (-0.04 textured, -0.02 everything else)
-- Gcode falls back to bundled brian_x1c_gcode.json if no existing profile found
+- Brian X1C 0.2/0.4/0.6/0.8: inherit BBL X1C + custom gcode (brian_x1c_gcode.json)
+- Brian A1M 0.2/0.4/0.6/0.8: inherit BBL A1M + custom gcode (brian_a1m_gcode.json)
+- Both gcode files are bundled as the single source of truth
+- See comment block above gcode loading functions for detailed change lists
+
+ORCASLICER.CONF PATCHES
+------------------------
+- Flush multiplier: 0.85 (15% reduction, conservative, safe for all filaments)
+- Printer names: "X1 Carbon" and "A1 Mini" (friendlier than serial-based defaults)
+- Known printer serials and access codes maintained for LAN mode
 """
 
 import json
+import math
 import os
 import shutil
 import sys
@@ -166,61 +192,144 @@ ORCA_PROFILE_VERSION = "1.10.0.35"
 FILAMENT_BASE_SUBDIR = USER_FILAMENT_DIR / "base"
 
 # =============================================================================
+# USER-MODIFIABLE: ENABLED PRINTERS
+# Toggle which printers to generate profiles for.
+# Set to True to enable, False to disable.
+# =============================================================================
+
+ENABLED_PRINTERS = {
+    "X1C": True,     # Bambu Lab X1 Carbon (enclosed CoreXY)
+    "P1S": False,    # Bambu Lab P1S (enclosed CoreXY, no lidar)
+    "A1":  False,    # Bambu Lab A1 (i3 gantry, 256mm bed)
+    "A1M": True,     # Bambu Lab A1 Mini (i3 gantry, 180mm bed)
+}
+
+# =============================================================================
 # PRINTERS
 # =============================================================================
 
-PRINTERS = {
+# Printer group: determines which settings philosophy to use.
+# "corexy" = enclosed CoreXY (X1C, P1S) - uses X1C speed/accel/infill settings
+# "i3"     = cantilevered gantry (A1, A1M) - uses A1M caps and crosshatch infill
+PRINTER_GROUP = {
+    "X1C": "corexy",
+    "P1S": "corexy",
+    "A1":  "i3",
+    "A1M": "i3",
+}
+
+# Profile name suffix per printer (X1C is default, no suffix)
+PRINTER_SUFFIX = {
+    "X1C": "",
+    "P1S": " P1S",
+    "A1":  " A1",
+    "A1M": " A1M",
+}
+
+# Filament profile suffix per printer (used in filament naming)
+FILAMENT_PRINTER_SUFFIX = {
+    "X1C": "",
+    "P1S": "",       # P1S shares X1C filament profiles (same enclosure behavior)
+    "A1":  " A1",
+    "A1M": " A1M",
+}
+
+ALL_PRINTERS = {
     "X1C": {
-        "base_profile_template": "{layer_height_str} Standard @BBL X1C",
-        "base_profile_0.4": "0.20mm Standard @BBL X1C",
-        "base_id": "GP004",
         "nozzle_base_profiles": {
             0.2: ("0.10mm Standard @BBL X1C 0.2 nozzle", "GP007"),
             0.4: ("0.20mm Standard @BBL X1C", "GP004"),
             0.6: ("0.30mm Standard @BBL X1C 0.6 nozzle", "GP010"),
             0.8: ("0.40mm Standard @BBL X1C 0.8 nozzle", "GP009"),
         },
-        # Machine profile names (what we generate in user/default/machine/)
         "machine_profile_names": {
             0.2: "Brian X1C 0.2",
             0.4: "Brian X1C 0.4",
             0.6: "Brian X1C 0.6",
             0.8: "Brian X1C 0.8",
         },
-        # BBL system machine profiles these inherit from
         "machine_base_profiles": {
             0.2: ("Bambu Lab X1 Carbon 0.2 nozzle", "GM002"),
             0.4: ("Bambu Lab X1 Carbon 0.4 nozzle", "GM001"),
             0.6: ("Bambu Lab X1 Carbon 0.6 nozzle", "GM005"),
             0.8: ("Bambu Lab X1 Carbon 0.8 nozzle", "GM004"),
         },
+        "machine_extras": {
+            "printable_area": ["0x0", "256x0", "256x248", "0x248"],
+            "thumbnails": "48x48/PNG, 300x300/PNG",
+        },
+        "gcode_file": "brian_x1c_gcode.json",
+    },
+    "P1S": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @BBL X1C 0.2 nozzle", "GP007"),  # P1S uses X1C process profiles
+            0.4: ("0.20mm Standard @BBL X1C", "GP004"),
+            0.6: ("0.30mm Standard @BBL X1C 0.6 nozzle", "GP010"),
+            0.8: ("0.40mm Standard @BBL X1C 0.8 nozzle", "GP009"),
+        },
+        "machine_profile_names": {
+            0.2: "Brian P1S 0.2",
+            0.4: "Brian P1S 0.4",
+            0.6: "Brian P1S 0.6",
+            0.8: "Brian P1S 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Bambu Lab P1S 0.2 nozzle", "GM015"),
+            0.4: ("Bambu Lab P1S 0.4 nozzle", "GM014"),
+            0.6: ("Bambu Lab P1S 0.6 nozzle", "GM016"),
+            0.8: ("Bambu Lab P1S 0.8 nozzle", "GM017"),
+        },
+        "machine_extras": {},
+        "gcode_file": "brian_p1s_gcode.json",
+    },
+    "A1": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @BBL A1 0.2 nozzle", "GP083"),
+            0.4: ("0.20mm Standard @BBL A1", "GP079"),
+            0.6: ("0.30mm Standard @BBL A1 0.6 nozzle", "GP096"),
+            0.8: ("0.40mm Standard @BBL A1 0.8 nozzle", "GP098"),
+        },
+        "machine_profile_names": {
+            0.2: "Brian A1 0.2",
+            0.4: "Brian A1 0.4",
+            0.6: "Brian A1 0.6",
+            0.8: "Brian A1 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Bambu Lab A1 0.2 nozzle", "GM031"),
+            0.4: ("Bambu Lab A1 0.4 nozzle", "GM030"),
+            0.6: ("Bambu Lab A1 0.6 nozzle", "GM032"),
+            0.8: ("Bambu Lab A1 0.8 nozzle", "GM033"),
+        },
+        "machine_extras": {},
+        "gcode_file": "brian_a1_gcode.json",
     },
     "A1M": {
-        "base_profile_template": "{layer_height_str} Standard @BBL A1M",
-        "base_profile_0.4": "0.20mm Standard @BBL A1M",
-        "base_id": "GP000",
         "nozzle_base_profiles": {
             0.2: ("0.10mm Standard @BBL A1M 0.2 nozzle", "GP083"),
             0.4: ("0.20mm Standard @BBL A1M", "GP000"),
             0.6: ("0.30mm Standard @BBL A1M 0.6 nozzle", "GP096"),
             0.8: ("0.40mm Standard @BBL A1M 0.8 nozzle", "GP098"),
         },
-        # Machine profile names
         "machine_profile_names": {
             0.2: "Brian A1M 0.2",
             0.4: "Brian A1M 0.4",
             0.6: "Brian A1M 0.6",
             0.8: "Brian A1M 0.8",
         },
-        # BBL system machine profiles these inherit from
         "machine_base_profiles": {
             0.2: ("Bambu Lab A1 mini 0.2 nozzle", "GM021"),
             0.4: ("Bambu Lab A1 mini 0.4 nozzle", "GM020"),
             0.6: ("Bambu Lab A1 mini 0.6 nozzle", "GM022"),
             0.8: ("Bambu Lab A1 mini 0.8 nozzle", "GM023"),
         },
+        "machine_extras": {},
+        "gcode_file": "brian_a1m_gcode.json",
     },
 }
+
+# Active printers dict (filtered by ENABLED_PRINTERS)
+PRINTERS = {k: v for k, v in ALL_PRINTERS.items() if ENABLED_PRINTERS.get(k, False)}
 
 NOZZLE_SIZES = [0.2, 0.4, 0.6, 0.8]
 
@@ -230,9 +339,9 @@ NOZZLE_SIZES = [0.2, 0.4, 0.6, 0.8]
 # =============================================================================
 
 UNIVERSAL_OVERRIDES = {
-    # First layer - slow for bed adhesion reliability (same on both printers)
-    "initial_layer_speed": "25",
-    "initial_layer_infill_speed": "30",
+    # First layer - slow for bed adhesion reliability
+    "initial_layer_speed": "20",
+    "initial_layer_infill_speed": "25",
     "initial_layer_acceleration": "75",
     "initial_layer_line_width": "125%",
     "initial_layer_travel_speed": "75%",
@@ -256,8 +365,8 @@ UNIVERSAL_OVERRIDES = {
     "brim_type": "no_brim",
     "bottom_shell_layers": "2",
     "top_shell_layers": "4",
-    "top_shell_thickness": "0.7",
-    "bottom_shell_thickness": "0.5",
+    "top_shell_thickness": "1.0",
+    "bottom_shell_thickness": "0.8",
 
     # Ironing (configured, not enabled - user enables per project)
     "ironing_flow": "26%",
@@ -291,19 +400,19 @@ UNIVERSAL_OVERRIDES = {
 # =============================================================================
 
 PRINTER_DELTAS = {
-    "X1C": {
+    "corexy": {
         # Gyroid: strongest per material used, but shakes the printer.
-        # Low infill accel (2000) absorbs the shock on X1C's rigid CoreXY frame.
+        # Low infill accel (2000) absorbs the shock on rigid CoreXY frame.
         "sparse_infill_pattern": "gyroid",
         "sparse_infill_density": "10%",
         "sparse_infill_acceleration": "2000",
         "travel_acceleration": "2500",
     },
-    "A1M": {
+    "i3": {
         # Crosshatch: less violent direction changes than gyroid.
-        # Better match for A1M's cantilevered gantry arm.
+        # Better match for cantilevered gantry arm (A1/A1M).
         # 15% compensates for crosshatch being slightly weaker than gyroid.
-        # 3000 accel: crosshatch is gentler so can go higher than X1C's 2000,
+        # 3000 accel: crosshatch is gentler so can go higher than corexy's 2000,
         # but still capped well below 6000 default for gantry stability on small parts.
         "sparse_infill_pattern": "crosshatch",
         "sparse_infill_density": "15%",
@@ -356,6 +465,9 @@ PLA_FAST = {
     "internal_solid_infill_acceleration": "5000",
     # Layer
     "layer_height": "0.20",
+    # Shells - thinner than standard, faster print
+    "top_shell_thickness": "0.8",
+    "bottom_shell_thickness": "0.6",
     # Walls
     "wall_loops": "2",
     "ensure_vertical_shell_thickness": "ensure_moderate",
@@ -402,10 +514,8 @@ PETG_ABS = {
     "overhang_4_4_speed": "30",
     "bridge_speed": "30",
     # Shells
-    "bottom_shell_layers": "2",
-    "bottom_shell_thickness": "0.35",
-    "top_shell_layers": "3",
-    "top_shell_thickness": "0.5",
+    "top_shell_thickness": "0.8",
+    "bottom_shell_thickness": "0.6",
     # Infill
     "sparse_infill_density": "11%",
     "support_threshold_angle": "35",
@@ -507,9 +617,6 @@ PLA_DELICATE = {
     "interlocking_beam": "1",
     "skirt_loops": "2",
     "support_threshold_angle": "35",
-    # Shells
-    "bottom_shell_thickness": "0.4",
-    "top_shell_thickness": "0.5",
     "enable_prime_tower": "0",
 }
 
@@ -535,8 +642,8 @@ PLA_MM = {
     "travel_acceleration": "2500",
     # Layer
     "layer_height": "0.20",
-    # Extra wall for color separation
-    "wall_loops": "3",
+    # Wall thickness target: 1mm minimum for color separation (calculated dynamically)
+    "min_wall_thickness": "1.0",
     # MM-specific
     "flush_into_infill": "1",
     "flush_into_support": "0",
@@ -545,9 +652,6 @@ PLA_MM = {
     "support_base_pattern_spacing": "3.5",
     "support_interface_pattern": "rectilinear_interlaced",
     "support_threshold_angle": "35",
-    # Shells
-    "bottom_shell_thickness": "0.6",
-    "top_shell_thickness": "0.8",
     # Raft
     "raft_first_layer_density": "50%",
     "raft_first_layer_expansion": "1.5",
@@ -576,8 +680,8 @@ PLA_PETG_PVA_MM = {
     "travel_acceleration": "2500",
     # Finer layer height for inter-material adhesion
     "layer_height": "0.18",
-    # Extra walls
-    "wall_loops": "3",
+    # Wall thickness target: 1mm minimum (calculated dynamically)
+    "min_wall_thickness": "1.0",
     # MM-specific - PVA support settings
     "flush_into_infill": "1",
     "timelapse_type": "1",
@@ -592,8 +696,6 @@ PLA_PETG_PVA_MM = {
     "support_object_xy_distance": "1",
     "support_threshold_angle": "35",
     # Shells
-    "bottom_shell_thickness": "0.6",
-    "top_shell_thickness": "0.8",
     # Raft
     "raft_first_layer_density": "25%",
     "raft_first_layer_expansion": "1.5",
@@ -840,7 +942,7 @@ FILAMENT_B_ABS = {
 FILAMENT_B_PVA = {
     **_FILAMENT_COMMON,
     "filament_type": ["PVA"],
-    "filament_cost": ["40"],
+    "filament_cost": ["50"],
     "filament_flow_ratio": ["0.95"],
     "filament_max_volumetric_speed": ["2"],
     "filament_is_support": ["1"],
@@ -856,9 +958,9 @@ FILAMENT_B_PVA = {
     "filament_wipe_distance": ["0.5"],
     "filament_z_hop": ["0.1"],
     "filament_z_hop_types": ["Spiral Lift"],
-    # Temps
+    # Temps - PVA degrades and strings at high temps, keep first layer moderate
     "nozzle_temperature": ["220"],
-    "nozzle_temperature_initial_layer": ["225"],
+    "nozzle_temperature_initial_layer": ["215"],
     "nozzle_temperature_range_high": ["250"],
     "nozzle_temperature_range_low": ["210"],
     "cool_plate_temp": ["48"],
@@ -901,22 +1003,87 @@ FILAMENT_B_PVA = {
     "filament_end_gcode": ["\n\n"],
 }
 
+FILAMENT_B_BVOH = {
+    **_FILAMENT_COMMON,
+    "filament_type": ["PVA"],  # OrcaSlicer treats BVOH as PVA type
+    "filament_cost": ["120"],
+    "filament_flow_ratio": ["0.95"],
+    "filament_max_volumetric_speed": ["2.5"],  # slightly more tolerant than PVA
+    "filament_is_support": ["1"],
+    "filament_soluble": ["1"],
+    # Retraction - moderate, BVOH clogs less than PVA but still be careful
+    "filament_retraction_length": ["0.8"],
+    "filament_retraction_speed": ["30"],
+    "filament_retraction_minimum_travel": ["0.6"],
+    "filament_deretraction_speed": ["20"],
+    "filament_retract_before_wipe": ["50%"],
+    "filament_retract_lift_above": ["0.25"],
+    "filament_wipe": ["1"],
+    "filament_wipe_distance": ["0.5"],
+    "filament_z_hop": ["0.1"],
+    "filament_z_hop_types": ["Spiral Lift"],
+    # Temps - BVOH prints 200-230°C, conservative at 210
+    "nozzle_temperature": ["210"],
+    "nozzle_temperature_initial_layer": ["210"],
+    "nozzle_temperature_range_high": ["230"],
+    "nozzle_temperature_range_low": ["200"],
+    # Plate temps - same as PVA (PLA-like temps)
+    "cool_plate_temp": ["48"],
+    "cool_plate_temp_initial_layer": ["48"],
+    "eng_plate_temp": ["48"],
+    "eng_plate_temp_initial_layer": ["48"],
+    "hot_plate_temp": ["48"],
+    "hot_plate_temp_initial_layer": ["48"],
+    "supertack_plate_temp": ["48"],
+    "supertack_plate_temp_initial_layer": ["48"],
+    "textured_cool_plate_temp": ["48"],
+    "textured_cool_plate_temp_initial_layer": ["48"],
+    "textured_plate_temp": ["48"],
+    "textured_plate_temp_initial_layer": ["48"],
+    "temperature_vitrification": ["55"],
+    # Fan - aggressive cooling like PVA
+    "activate_air_filtration": ["1"],
+    "additional_cooling_fan_speed": ["50"],
+    "complete_print_exhaust_fan_speed": ["30"],
+    "during_print_exhaust_fan_speed": ["70"],
+    "enable_overhang_bridge_fan": ["1"],
+    "fan_cooling_layer_time": ["100"],
+    "fan_max_speed": ["100"],
+    "fan_min_speed": ["100"],
+    "full_fan_speed_layer": ["0"],
+    "close_fan_the_first_x_layers": ["1"],
+    "overhang_fan_speed": ["100"],
+    "overhang_fan_threshold": ["50%"],
+    "reduce_fan_stop_start_freq": ["1"],
+    "support_material_interface_fan_speed": ["50"],
+    # Cooling
+    "slow_down_for_layer_cooling": ["1"],
+    "slow_down_layer_time": ["7"],
+    "slow_down_min_speed": ["20"],
+    # Pressure advance
+    "enable_pressure_advance": ["1"],
+    "pressure_advance": ["0.01"],
+    # Gcode
+    "filament_start_gcode": [""],
+    "filament_end_gcode": ["\n\n"],
+}
+
 # Child filament: overrides on top of B PLA
 FILAMENT_B_PLA_SILK_OVERRIDES = {
     "filament_cost": ["22"],
     "filament_max_volumetric_speed": ["2.6"],
     "filament_retraction_length": ["0.4"],
     "nozzle_temperature": ["232"],
-    "nozzle_temperature_initial_layer": ["220"],
+    "nozzle_temperature_initial_layer": ["225"],
 }
 
 FILAMENT_B_PLA_WOOD_OVERRIDES = {
     "filament_cost": ["30"],
-    "filament_max_volumetric_speed": ["3"],
+    "filament_max_volumetric_speed": ["2"],  # wood particles restrict flow, higher = clog risk
     "filament_retraction_length": ["0.5"],
     "filament_z_hop": ["0.15"],
     "filament_z_hop_types": ["Auto Lift"],
-    "nozzle_temperature_initial_layer": ["230"],
+    "nozzle_temperature_initial_layer": ["210"],  # high temp chars wood particles and clogs
 }
 
 # Registry: name -> (base_data, parent_name_or_None, printers_list_or_None)
@@ -928,6 +1095,7 @@ FILAMENT_REGISTRY = {
     "B PETG":     (FILAMENT_B_PETG, None, None),
     "B ABS":      (FILAMENT_B_ABS, None, ["X1C"]),
     "B PVA":      (FILAMENT_B_PVA, None, None),
+    "B BVOH":     (FILAMENT_B_BVOH, None, None),
     "B PLA Silk": (FILAMENT_B_PLA_SILK_OVERRIDES, "B PLA", None),
     "B PLA Wood": (FILAMENT_B_PLA_WOOD_OVERRIDES, "B PLA", None),
 }
@@ -1034,11 +1202,6 @@ PERCENTAGE_KEYS = {
 # PROFILE NAME GENERATION
 # =============================================================================
 
-PRINTER_SHORT = {
-    "X1C": "",       # X1C is default, no suffix
-    "A1M": " A1M",
-}
-
 NOZZLE_SHORT = {
     0.2: " 0.2n",
     0.4: "",         # 0.4 is default, no suffix
@@ -1048,8 +1211,8 @@ NOZZLE_SHORT = {
 
 
 def make_profile_name(mode_name: str, printer: str, nozzle: float) -> str:
-    """Generate a profile name like 'B PLA Standard' or 'B PETG ABS A1M 0.6n'."""
-    return f"B {mode_name}{PRINTER_SHORT[printer]}{NOZZLE_SHORT[nozzle]}"
+    """Generate a profile name like 'B PLA' or 'B PETG ABS A1M 0.6n'."""
+    return f"B {mode_name}{PRINTER_SUFFIX[printer]}{NOZZLE_SHORT[nozzle]}"
 
 
 # =============================================================================
@@ -1067,115 +1230,54 @@ def scale_numeric_value(value_str: str, multiplier: float) -> str:
         return value_str
 
 
-def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
+def _ceil_div(numerator: float, denominator: float) -> int:
+    """Ceiling division for calculating layer counts from thickness targets."""
+    return math.ceil(numerator / denominator)
+
+
+def _calc_shell_layers(target_thickness: float, layer_height: float, min_layers: int = 2) -> int:
+    """Calculate shell layer count from thickness target, enforcing minimum."""
+    return max(min_layers, _ceil_div(target_thickness, layer_height))
+
+
+def _raise_infill_to_max_speed(profile: dict):
+    """On A1M, raise sparse infill speed to match the fastest non-infill speed.
+    Crosshatch is gentle enough that there's no reason to artificially slow it."""
+    speed_keys = ["outer_wall_speed", "inner_wall_speed", "internal_solid_infill_speed",
+                  "top_surface_speed", "gap_infill_speed"]
+    speeds = []
+    for k in speed_keys:
+        if k in profile:
+            try:
+                speeds.append(int(float(profile[k])))
+            except ValueError:
+                pass
+    if speeds:
+        max_speed = max(speeds)
+        current = int(float(profile.get("sparse_infill_speed", "0")))
+        if current < max_speed:
+            profile["sparse_infill_speed"] = str(max_speed)
+
+
+def _apply_speed_multiplier(profile: dict, multiplier: float):
+    """Scale all speed values by a multiplier."""
+    for key in list(profile.keys()):
+        if key in SPEED_KEYS:
+            profile[key] = scale_numeric_value(profile[key], multiplier)
+
+
+def _apply_caps(profile: dict, max_accel: int, max_speed: int, travel_cap: int,
+                first_layer_caps: dict = None):
+    """Apply hard caps to speeds and accelerations.
+
+    Args:
+        max_accel: Maximum acceleration for any accel setting
+        max_speed: Maximum speed for any non-travel speed setting
+        travel_cap: Maximum travel speed (may differ from max_speed)
+        first_layer_caps: Optional dict of {key: cap} for first layer overrides
     """
-    Build a complete profile by layering:
-    1. Universal overrides
-    2. Printer deltas
-    3. Material mode
-    4. Nozzle scaling
-    """
-    profile = {}
-
-    # Layer 1: Universal overrides
-    profile.update(deepcopy(UNIVERSAL_OVERRIDES))
-
-    # Layer 2: Printer deltas
-    profile.update(deepcopy(PRINTER_DELTAS[printer]))
-
-    # Layer 3: Material mode
-    mode = deepcopy(MATERIAL_MODES[mode_name])
-    profile.update(mode)
-
-    # PLA Fast A1M gets extra travel speed override
-    if mode_name == "PLA Fast" and printer == "A1M":
-        profile.update(PLA_FAST_A1M_EXTRA)
-
-    # A1M infill speed: raise to match highest non-infill speed in profile
-    if printer == "A1M":
-        non_infill_speeds = []
-        for k in ["outer_wall_speed", "inner_wall_speed", "internal_solid_infill_speed",
-                   "top_surface_speed", "gap_infill_speed"]:
-            if k in profile:
-                try:
-                    non_infill_speeds.append(int(float(profile[k])))
-                except ValueError:
-                    pass
-        if non_infill_speeds:
-            max_speed = max(non_infill_speeds)
-            current_infill = int(float(profile.get("sparse_infill_speed", "0")))
-            if current_infill < max_speed:
-                profile["sparse_infill_speed"] = str(max_speed)
-
-    # Layer 4: Nozzle scaling
-
-    # 4a: Layer height
-    if mode_name == "PLA Draft":
-        base_lh = NOZZLE_DRAFT_LAYER_HEIGHT[nozzle]
-    elif mode_name == "PLA+PETG+PVA MM":
-        base_lh = NOZZLE_PVA_MM_LAYER_HEIGHT[nozzle]
-    else:
-        base_lh = NOZZLE_DEFAULT_LAYER_HEIGHT[nozzle]
-    profile["layer_height"] = f"{base_lh:.2f}"
-
-    # 4b: Wall loops - add extra for small nozzles to maintain wall thickness
-    base_walls = int(profile.get("wall_loops", "2"))
-    profile["wall_loops"] = str(base_walls + NOZZLE_WALL_LOOP_ADDITION[nozzle])
-
-    # 4c: Speed and acceleration scaling for non-0.4 nozzles
-    speed_mult = NOZZLE_SPEED_MULTIPLIER[nozzle]
-    accel_mult = NOZZLE_ACCEL_MULTIPLIER[nozzle]
-
-    if speed_mult != 1.0:
-        for key in list(profile.keys()):
-            if key in SPEED_KEYS:
-                profile[key] = scale_numeric_value(profile[key], speed_mult)
-
-    if accel_mult != 1.0:
-        for key in list(profile.keys()):
-            if key in ACCEL_KEYS:
-                profile[key] = scale_numeric_value(profile[key], accel_mult)
-
-    # 4d: Support z-distance scales with layer height
-    # (except PLA+PETG+PVA MM which forces 0 for PVA adhesion)
-    if mode_name != "PLA+PETG+PVA MM":
-        lh = float(profile["layer_height"])
-        profile["support_top_z_distance"] = f"{lh:.2f}"
-        profile["support_bottom_z_distance"] = f"{lh:.2f}"
-
-    # 4e: Shell thickness adjustments for layer height
-    lh = float(profile["layer_height"])
-    # bottom_shell_layers: ensure at least the thickness / layer_height
-    if "bottom_shell_thickness" in profile:
-        target_thickness = float(profile["bottom_shell_thickness"])
-        min_layers = max(1, int(round(target_thickness / lh)))
-        profile["bottom_shell_layers"] = str(min_layers)
-
-    # 5: Delicate speed reductions (applied before A1M caps)
-    # X1C Delicate: 20% slower across all speeds
-    # A1M Delicate: 35% slower across all speeds
-    if mode_name == "PLA Delicate":
-        if printer == "X1C":
-            delicate_mult = 0.80
-        elif printer == "A1M":
-            delicate_mult = 0.65
-        else:
-            delicate_mult = 1.0
-        for key in list(profile.keys()):
-            if key in SPEED_KEYS:
-                profile[key] = scale_numeric_value(profile[key], delicate_mult)
-
-    # 6: A1M hard caps - gantry arm can't handle high speeds/accels
-    if printer == "A1M":
-        A1M_MAX_ACCEL = 5000
-        A1M_MAX_SPEED = 150
-        A1M_TRAVEL_CAP = 150
-
-        # A1M first layer: hard cap for bed adhesion on gantry printer
-        A1M_MAX_FIRST_LAYER_SPEED = 16
-        A1M_MAX_FIRST_LAYER_INFILL_SPEED = 20
-        for key, cap in [("initial_layer_speed", A1M_MAX_FIRST_LAYER_SPEED),
-                         ("initial_layer_infill_speed", A1M_MAX_FIRST_LAYER_INFILL_SPEED)]:
+    if first_layer_caps:
+        for key, cap in first_layer_caps.items():
             if key in profile:
                 try:
                     val = int(float(profile[key]))
@@ -1183,28 +1285,178 @@ def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
                         profile[key] = str(cap)
                 except (ValueError, TypeError):
                     pass
-        # Delicate on A1M gets tighter caps
-        if mode_name == "PLA Delicate":
-            A1M_MAX_ACCEL = 1500
-            A1M_MAX_SPEED = 150  # already slowed by 35% above
-            A1M_TRAVEL_CAP = 60
 
+    for key in list(profile.keys()):
+        if key in ACCEL_KEYS:
+            try:
+                val = int(float(profile[key]))
+                if val > max_accel:
+                    profile[key] = str(max_accel)
+            except (ValueError, TypeError):
+                pass
+        if key in SPEED_KEYS:
+            cap = travel_cap if key == "travel_speed" else max_speed
+            try:
+                val = int(float(profile[key]))
+                if val > cap:
+                    profile[key] = str(cap)
+            except (ValueError, TypeError):
+                pass
+
+
+# Mode+nozzle specific overrides applied after nozzle scaling.
+# Format: (mode_name, nozzle_size) -> dict of overrides
+MODE_NOZZLE_OVERRIDES = {
+    # PETG on 0.8mm nozzle: 1 wall + alternate (wall already thick enough)
+    ("PETG ABS", 0.8): {
+        "wall_loops": "1",
+        "alternate_extra_wall": "1",
+    },
+    # Draft on 0.2mm nozzle: needs real structure since lines are so thin
+    ("PLA Draft", 0.2): {
+        "wall_loops": "2",
+        "alternate_extra_wall": "0",
+        "top_shell_layers": "2",
+        "bottom_shell_layers": "2",
+    },
+}
+
+# Delicate mode speed multipliers per printer group (applied before i3 caps)
+DELICATE_SPEED_MULT = {
+    "corexy": 0.80,  # 20% slower
+    "i3":     0.65,  # 35% slower
+}
+
+# i3 (A1/A1M) hard caps per mode. Default caps apply to all modes unless overridden.
+I3_CAPS = {
+    "_default": {
+        "max_accel": 5000,
+        "max_speed": 150,
+        "travel_cap": 150,
+        "first_layer_caps": {
+            "initial_layer_speed": 16,
+            "initial_layer_infill_speed": 20,
+        },
+    },
+    "PLA Delicate": {
+        "max_accel": 1500,
+        "max_speed": 150,
+        "travel_cap": 60,
+    },
+}
+
+# Layer height lookup per mode (which table to use)
+MODE_LAYER_HEIGHT_TABLE = {
+    "PLA Draft": NOZZLE_DRAFT_LAYER_HEIGHT,
+    "PLA+PETG+PVA MM": NOZZLE_PVA_MM_LAYER_HEIGHT,
+}
+
+
+def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
+    """
+    Build a complete process profile by applying layers in order:
+
+    1. Universal overrides (Brian's baseline preferences)
+    2. Printer deltas (X1C vs A1M hardware differences)
+    3. Material mode (speed/accel/structural philosophy)
+    4. Nozzle scaling (layer height, wall count, speed/accel multipliers)
+    5. Shell calculation (layers from thickness targets, min 2)
+    6. Mode+nozzle overrides (specific combos needing special treatment)
+    7. Speed reductions (Delicate mode per-printer slowdowns)
+    8. Printer hard caps (A1M speed/accel limits, applied last)
+
+    Order matters: reductions (step 7) must come before caps (step 8)
+    so that Delicate speeds are reduced first, then capped.
+    """
+    profile = {}
+
+    group = PRINTER_GROUP[printer]
+
+    # --- Step 1-3: Build base profile from layers ---
+    profile.update(deepcopy(UNIVERSAL_OVERRIDES))
+    profile.update(deepcopy(PRINTER_DELTAS[group]))
+    profile.update(deepcopy(MATERIAL_MODES[mode_name]))
+
+    if mode_name == "PLA Fast" and group == "i3":
+        profile.update(PLA_FAST_A1M_EXTRA)
+
+    if group == "i3":
+        _raise_infill_to_max_speed(profile)
+
+    # --- Step 4: Nozzle scaling ---
+
+    # Layer height
+    lh_table = MODE_LAYER_HEIGHT_TABLE.get(mode_name, NOZZLE_DEFAULT_LAYER_HEIGHT)
+    lh = lh_table[nozzle]
+    profile["layer_height"] = f"{lh:.2f}"
+
+    # Wall loops: either use min_wall_thickness target or add extra for small nozzles
+    outer_w = nozzle * 1.05  # 105% line width
+    inner_w = nozzle * 1.12  # 112% line width
+
+    if "min_wall_thickness" in profile:
+        # Dynamic: calculate walls needed to meet thickness target
+        target = float(profile.pop("min_wall_thickness"))
+        walls = 1
+        while outer_w + (walls - 1) * inner_w < target:
+            walls += 1
+        walls = max(walls, 2)  # minimum 2 walls always
+        profile["wall_loops"] = str(walls)
+    else:
+        # Static: use mode's wall_loops + nozzle addition for small nozzles
+        base_walls = int(profile.get("wall_loops", "2"))
+        profile["wall_loops"] = str(base_walls + NOZZLE_WALL_LOOP_ADDITION[nozzle])
+
+    # Speed/accel scaling for larger nozzles
+    speed_mult = NOZZLE_SPEED_MULTIPLIER[nozzle]
+    accel_mult = NOZZLE_ACCEL_MULTIPLIER[nozzle]
+    if speed_mult != 1.0:
+        _apply_speed_multiplier(profile, speed_mult)
+    if accel_mult != 1.0:
         for key in list(profile.keys()):
             if key in ACCEL_KEYS:
-                try:
-                    val = int(float(profile[key]))
-                    if val > A1M_MAX_ACCEL:
-                        profile[key] = str(A1M_MAX_ACCEL)
-                except (ValueError, TypeError):
-                    pass
-            if key in SPEED_KEYS:
-                cap = A1M_TRAVEL_CAP if key == "travel_speed" else A1M_MAX_SPEED
-                try:
-                    val = int(float(profile[key]))
-                    if val > cap:
-                        profile[key] = str(cap)
-                except (ValueError, TypeError):
-                    pass
+                profile[key] = scale_numeric_value(profile[key], accel_mult)
+
+    # Support z-distance scales with layer height
+    # (PLA+PETG+PVA MM forces 0 for PVA adhesion - set in mode constants)
+    if mode_name != "PLA+PETG+PVA MM":
+        profile["support_top_z_distance"] = f"{lh:.2f}"
+        profile["support_bottom_z_distance"] = f"{lh:.2f}"
+
+    # --- Step 5: Shell layer calculation ---
+    # Rule: ceil(target / layer_height), min 2 layers (Draft exempt)
+    min_shell = 1 if mode_name == "PLA Draft" else 2
+    if "top_shell_thickness" in profile:
+        profile["top_shell_layers"] = str(
+            _calc_shell_layers(float(profile["top_shell_thickness"]), lh, min_shell))
+    if "bottom_shell_thickness" in profile:
+        profile["bottom_shell_layers"] = str(
+            _calc_shell_layers(float(profile["bottom_shell_thickness"]), lh, min_shell))
+
+    # --- Step 6: Mode+nozzle specific overrides ---
+    overrides = MODE_NOZZLE_OVERRIDES.get((mode_name, nozzle))
+    if overrides:
+        profile.update(overrides)
+
+    # --- Step 7: Per-printer-group speed reductions ---
+    if mode_name == "PLA Delicate":
+        mult = DELICATE_SPEED_MULT.get(group, 1.0)
+        if mult != 1.0:
+            _apply_speed_multiplier(profile, mult)
+
+    # --- Step 8: i3 hard caps (must be last) ---
+    if group == "i3":
+        caps = {**I3_CAPS["_default"]}
+        mode_caps = I3_CAPS.get(mode_name)
+        if mode_caps:
+            caps.update(mode_caps)
+        _apply_caps(
+            profile,
+            max_accel=caps["max_accel"],
+            max_speed=caps["max_speed"],
+            travel_cap=caps["travel_cap"],
+            first_layer_caps=caps.get("first_layer_caps"),
+        )
 
     return profile
 
@@ -1244,44 +1496,44 @@ def format_info_file(base_id: str) -> str:
 # MACHINE PROFILE GENERATION
 # =============================================================================
 
-# Brian's X1C 0.4 gcode customizations are read from the existing profile
-# at generation time. Other X1C nozzle variants get the same gcode since
-# it uses OrcaSlicer variables (not hardcoded nozzle-specific values).
-# A1M profiles inherit BBL defaults with no gcode customization.
+# =============================================================================
+# CUSTOM GCODE
+# =============================================================================
+#
+# Both printers use bundled gcode JSON files as the single source of truth.
+# Edit the JSON files directly, then regenerate.
+#
+# brian_x1c_gcode.json - X1C custom gcode (start, end, change_filament, layer_change)
+#   Customizations vs stock BBL X1C:
+#   - Parallel nozzle pre-heat (M104 S170) during bed heating for faster startup
+#   - Z-offset for all plate types (-0.04 textured PEI, -0.02 all others)
+#   - Shorter purge line (45mm two-pass vs stock 221mm) - less waste, faster
+#   - More Z clearance after print (+2mm vs +0.5mm) to avoid dragging
+#   - Reduced toolchange travel speeds (F15000/F21000 -> F9000) - less vibration
+#   - Reduced toolchange shake speeds (F15000 -> F9000) - quieter
+#   - Custom layer_change_gcode: timelapse support, logo lamp off, layer progress
+#
+# brian_a1m_gcode.json - A1M custom gcode (start, change_filament)
+#   Customizations vs stock BBL A1M:
+#   - Reduced startup fan speed (S255 -> S128 / 50%) for quieter operation
+#   - Z-offset for all plate types (-0.04 textured PEI, -0.02 all others)
+#   - Reduced toolchange travel speeds (F18000 -> F9000) - less vibration on gantry
+#
+# Both use OrcaSlicer variables so they work across all nozzle sizes.
 
-# Source locations to find Brian's gcode (checked in order)
-# Falls back to bundled gcode data file if no existing profile found
-BRIAN_GCODE_SOURCES = [
-    MACHINE_DIR / "Brian X1C 0.4.json",
-    MACHINE_DIR / "Brian 0.4 nozzle.json",
-]
-BRIAN_GCODE_FALLBACK = Path(__file__).parent / "brian_x1c_gcode.json"
-
-GCODE_KEYS = ["machine_start_gcode", "machine_end_gcode",
-              "change_filament_gcode", "layer_change_gcode"]
+BRIAN_X1C_GCODE_FILE = Path(__file__).parent / "brian_x1c_gcode.json"
+BRIAN_A1M_GCODE_FILE = Path(__file__).parent / "brian_a1m_gcode.json"
 
 
-def load_brian_x1c_gcode() -> dict:
-    """Load Brian's custom gcode from existing profile or bundled fallback."""
-    # Try existing machine profiles first
-    for path in BRIAN_GCODE_SOURCES:
-        if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            gcode = {k: data[k] for k in GCODE_KEYS if k in data}
-            if gcode:
-                print(f"  Loaded gcode from: {path.name}")
-                return gcode
-
-    # Fall back to bundled gcode data file
-    if BRIAN_GCODE_FALLBACK.exists():
-        with open(BRIAN_GCODE_FALLBACK, "r", encoding="utf-8") as f:
-            gcode = json.load(f)
-        print(f"  Loaded gcode from fallback: {BRIAN_GCODE_FALLBACK.name}")
-        return gcode
-
-    print("WARNING: Could not find Brian's X1C gcode from any source")
-    return {}
+def _load_gcode_file(path: Path) -> dict:
+    """Load a bundled gcode JSON file."""
+    if not path.exists():
+        print(f"  ERROR: {path.name} not found")
+        return {}
+    with open(path, "r", encoding="utf-8") as f:
+        gcode = json.load(f)
+    print(f"  Loaded gcode from: {path.name}")
+    return gcode
 
 
 # =============================================================================
@@ -1311,12 +1563,20 @@ def generate_filament_profiles(dry_run: bool = False):
         else:
             full_data = deepcopy(fil_data)
 
-        # Generate one per printer (respecting printer filter)
+        # Generate one per unique filament suffix (avoids duplicates for
+        # printers that share the same filament suffix, e.g. X1C and P1S)
+        seen_suffixes = set()
         for printer_key, printer_cfg in PRINTERS.items():
             if allowed_printers and printer_key not in allowed_printers:
                 continue
-            printer_suffix = " A1M" if printer_key == "A1M" else ""
-            profile_name = f"{filament_name}{printer_suffix}"
+
+            suffix = FILAMENT_PRINTER_SUFFIX[printer_key]
+            if suffix in seen_suffixes:
+                continue
+            seen_suffixes.add(suffix)
+
+            group = PRINTER_GROUP[printer_key]
+            profile_name = f"{filament_name}{suffix}"
 
             profile = deepcopy(full_data)
             profile["name"] = profile_name
@@ -1325,27 +1585,45 @@ def generate_filament_profiles(dry_run: bool = False):
             profile["is_custom_defined"] = "0"
             profile["version"] = ORCA_PROFILE_VERSION
 
-            # Set compatible_printers to all nozzle variants for this printer
-            profile["compatible_printers"] = [
-                printer_cfg["machine_base_profiles"][nozzle][0]
-                for nozzle in NOZZLE_SIZES
-            ]
+            # Set compatible_printers to all nozzle variants for all printers
+            # that share this filament suffix
+            compat = []
+            for pk, pcfg in PRINTERS.items():
+                if FILAMENT_PRINTER_SUFFIX[pk] == suffix:
+                    for nozzle in NOZZLE_SIZES:
+                        compat.append(pcfg["machine_base_profiles"][nozzle][0])
+            profile["compatible_printers"] = compat
 
-            # A1M: slightly more retraction for the gantry arm
-            if printer_key == "A1M" and "filament_retraction_length" in profile:
+            # i3 printers: slightly more retraction for the gantry arm
+            if group == "i3" and "filament_retraction_length" in profile:
                 try:
                     base_ret = float(profile["filament_retraction_length"][0])
                     profile["filament_retraction_length"] = [f"{base_ret + 0.1:.2f}"]
                 except (ValueError, IndexError):
                     pass
 
-            # A1M: supertack plate runs hotter for PLA-based filaments
-            # (no enclosure to trap heat like X1C)
-            if printer_key == "A1M":
+            ALL_PLATE_KEYS = [
+                "cool_plate_temp", "cool_plate_temp_initial_layer",
+                "eng_plate_temp", "eng_plate_temp_initial_layer",
+                "hot_plate_temp", "hot_plate_temp_initial_layer",
+                "supertack_plate_temp", "supertack_plate_temp_initial_layer",
+                "textured_cool_plate_temp", "textured_cool_plate_temp_initial_layer",
+                "textured_plate_temp", "textured_plate_temp_initial_layer",
+            ]
+
+            # CoreXY (enclosed): PLA-based filaments use 48°C across all plates
+            if group == "corexy":
                 fil_type = profile.get("filament_type", [""])[0]
                 if fil_type in ("PLA", "PVA"):
-                    profile["supertack_plate_temp"] = ["60"]
-                    profile["supertack_plate_temp_initial_layer"] = ["60"]
+                    for plate_key in ALL_PLATE_KEYS:
+                        profile[plate_key] = ["48"]
+
+            # i3 (open air): PLA-based filaments use 57°C across all plates
+            if group == "i3":
+                fil_type = profile.get("filament_type", [""])[0]
+                if fil_type in ("PLA", "PVA"):
+                    for plate_key in ALL_PLATE_KEYS:
+                        profile[plate_key] = ["57"]
 
             if dry_run:
                 zhop = profile.get("filament_z_hop", ["?"])[0]
@@ -1371,59 +1649,17 @@ def generate_filament_profiles(dry_run: bool = False):
     return count
 
 
-# Original A1M z-offset block (BBL default)
-A1M_ZOFFSET_ORIGINAL = """;===== for Textured PEI Plate , lower the nozzle as the nozzle was touching topmost of the texture when homing ==
-;curr_bed_type={curr_bed_type}
-{if curr_bed_type=="Textured PEI Plate"}
-G29.1 Z{-0.02} ; for Textured PEI Plate
-{endif}"""
-
-# Brian's replacement: Textured PEI gets -0.04, everything else gets -0.02
-A1M_ZOFFSET_PATCHED = """;===== for Textured PEI Plate , lower the nozzle as the nozzle was touching topmost of the texture when homing ==
-;curr_bed_type={curr_bed_type}
-{if curr_bed_type=="Textured PEI Plate"}
-G29.1 Z{-0.04} ; for Textured PEI Plate
-{else}
-; lower just slightly if other kinds of plates, i prefer the different bed adhesion
-G29.1 Z{-0.02} ; for other plates
-{endif}"""
-
-SYSTEM_MACHINE_DIR = ORCA_DIR / "system" / "BBL" / "machine"
-
-
-def load_a1m_patched_gcode(base_profile_name: str) -> str:
-    """Load A1M base start gcode and patch in Brian's z-offset logic."""
-    path = SYSTEM_MACHINE_DIR / f"{base_profile_name}.json"
-    if not path.exists():
-        print(f"  WARNING: Could not find {path.name} for A1M gcode patching")
-        return ""
-
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    gcode = data.get("machine_start_gcode", "")
-    if not gcode:
-        # May need to walk inheritance chain
-        parent = data.get("inherits", "")
-        if parent:
-            parent_path = SYSTEM_MACHINE_DIR / f"{parent}.json"
-            if parent_path.exists():
-                with open(parent_path, "r", encoding="utf-8") as f:
-                    parent_data = json.load(f)
-                gcode = parent_data.get("machine_start_gcode", "")
-
-    if A1M_ZOFFSET_ORIGINAL in gcode:
-        gcode = gcode.replace(A1M_ZOFFSET_ORIGINAL, A1M_ZOFFSET_PATCHED)
-        return gcode
-
-    print(f"  WARNING: Could not find z-offset block in {base_profile_name} gcode")
-    return gcode if gcode else ""
-
-
 def generate_machine_profiles(dry_run: bool = False):
     """Generate machine profiles for all printer/nozzle combinations."""
     count = 0
-    brian_gcode = load_brian_x1c_gcode()
+
+    # Load all gcode files for enabled printers
+    gcode_cache = {}
+    for printer_key, printer_cfg in PRINTERS.items():
+        gcode_filename = printer_cfg["gcode_file"]
+        if gcode_filename not in gcode_cache:
+            gcode_path = Path(__file__).parent / gcode_filename
+            gcode_cache[gcode_filename] = _load_gcode_file(gcode_path)
 
     for printer_key, printer_cfg in PRINTERS.items():
         for nozzle in NOZZLE_SIZES:
@@ -1440,17 +1676,14 @@ def generate_machine_profiles(dry_run: bool = False):
                 "version": ORCA_PROFILE_VERSION,
             }
 
-            # X1C profiles get Brian's custom gcode and overrides
-            if printer_key == "X1C":
-                profile.update(brian_gcode)
-                profile["printable_area"] = ["0x0", "256x0", "256x248", "0x248"]
-                profile["thumbnails"] = "48x48/PNG, 300x300/PNG"
+            # Apply custom gcode from bundled file
+            gcode = gcode_cache.get(printer_cfg["gcode_file"], {})
+            if gcode:
+                profile.update(gcode)
 
-            # A1M profiles: patch start gcode with Brian's z-offset logic
-            if printer_key == "A1M":
-                a1m_gcode = load_a1m_patched_gcode(base_name)
-                if a1m_gcode:
-                    profile["machine_start_gcode"] = a1m_gcode
+            # Apply any machine extras (printable_area, thumbnails, etc)
+            if printer_cfg.get("machine_extras"):
+                profile.update(printer_cfg["machine_extras"])
 
             if dry_run:
                 print(f"  [DRY RUN] Would write machine: {machine_name} (inherits {base_name})")
@@ -1557,6 +1790,88 @@ def generate_all(dry_run: bool = False):
     return profiles_generated
 
 
+# =============================================================================
+# ORCASLICER.CONF GLOBAL SETTINGS
+# =============================================================================
+
+ORCA_CONF_PATH = ORCA_DIR / "OrcaSlicer.conf"
+
+# Flush multiplier: 0.9 = 10% reduction from default purge volumes.
+# Community tests show BBL's auto-calculated volumes are ~57% higher than needed.
+# 0.9 is conservative and safe for all filaments including silk and PVA.
+FLUSH_MULTIPLIER = "0.850000"
+
+# Known printers: serial -> (friendly_name, ip, printer_type, access_code)
+# Used to ensure local_machines and user_access_code are set in OrcaSlicer.conf
+KNOWN_PRINTERS = {
+    "00M00A322700314": {
+        "dev_name": "X1 Carbon",
+        "printer_type": "BL-P001",
+    },
+    "0300CA612500025": {
+        "dev_name": "A1 Mini",
+        "printer_type": "N1",
+    },
+}
+
+
+def patch_orca_conf(dry_run: bool = False):
+    """Patch global settings in OrcaSlicer.conf."""
+    if not ORCA_CONF_PATH.exists():
+        print("  WARNING: OrcaSlicer.conf not found")
+        return
+
+    with open(ORCA_CONF_PATH, "r", encoding="utf-8") as f:
+        raw = f.read()
+
+    # OrcaSlicer.conf may have a trailing MD5 comment line - strip it for parsing
+    lines = raw.split("\n")
+    json_lines = [l for l in lines if not l.startswith("# MD5")]
+    conf = json.loads("\n".join(json_lines))
+
+    changed = False
+
+    # Flush multiplier
+    old_flush = conf.get("flush_multiplier", "")
+    if old_flush != FLUSH_MULTIPLIER:
+        conf["flush_multiplier"] = FLUSH_MULTIPLIER
+        if dry_run:
+            print(f"  [DRY RUN] Would set flush_multiplier to {FLUSH_MULTIPLIER}")
+        else:
+            print(f"  Set flush_multiplier to {FLUSH_MULTIPLIER}")
+        changed = True
+    else:
+        print(f"  flush_multiplier already {FLUSH_MULTIPLIER}")
+
+    # Ensure known printers exist in local_machines with correct names
+    local_machines = conf.setdefault("local_machines", {})
+    for serial, info in KNOWN_PRINTERS.items():
+        if serial not in local_machines:
+            local_machines[serial] = {
+                "dev_ip": "",
+                "dev_name": info["dev_name"],
+                "printer_type": info["printer_type"],
+            }
+            if dry_run:
+                print(f"  [DRY RUN] Would add printer {info['dev_name']} ({serial})")
+            else:
+                print(f"  Added printer {info['dev_name']} ({serial})")
+            changed = True
+        elif local_machines[serial].get("dev_name") != info["dev_name"]:
+            old_name = local_machines[serial].get("dev_name", "?")
+            local_machines[serial]["dev_name"] = info["dev_name"]
+            if dry_run:
+                print(f"  [DRY RUN] Would rename {serial} from '{old_name}' to '{info['dev_name']}'")
+            else:
+                print(f"  Renamed {serial} from '{old_name}' to '{info['dev_name']}'")
+            changed = True
+
+    if not dry_run and changed:
+        with open(ORCA_CONF_PATH, "w", encoding="utf-8") as f:
+            json.dump(conf, f, indent=4, ensure_ascii=False)
+            f.write("\n")
+
+
 def cleanup_system_vendor(dry_run: bool = False):
     """Remove the old system/Brian vendor directory if it exists."""
     cleaned = 0
@@ -1575,15 +1890,47 @@ def cleanup_system_vendor(dry_run: bool = False):
     return cleaned
 
 
+def clean_all_profiles(dry_run: bool = False):
+    """Delete ALL user process, machine, and filament profiles (Brian-generated ones)."""
+    cleaned = 0
+    for subdir in [PROCESS_DIR, MACHINE_DIR]:
+        if subdir.exists():
+            for f in list(subdir.glob("B *.json")) + list(subdir.glob("B *.info")) + \
+                     list(subdir.glob("Brian *.json")) + list(subdir.glob("Brian *.info")):
+                if dry_run:
+                    print(f"  [DRY RUN] Would delete: {f.name}")
+                else:
+                    f.unlink()
+                cleaned += 1
+    for subdir in [FILAMENT_DIR, FILAMENT_BASE_SUBDIR]:
+        if subdir.exists():
+            for f in list(subdir.glob("B *.json")) + list(subdir.glob("B *.info")):
+                if dry_run:
+                    print(f"  [DRY RUN] Would delete: {f.name}")
+                else:
+                    f.unlink()
+                cleaned += 1
+    return cleaned
+
+
 def main():
     dry_run = "--dry-run" in sys.argv
     backup_only = "--backup-only" in sys.argv
+    do_clean = "--clean" in sys.argv
+    auto_yes = "--yes" in sys.argv
+
+    enabled = [k for k, v in ENABLED_PRINTERS.items() if v]
 
     print(f"OrcaSlicer Profile Generator")
+    print(f"Enabled printers: {', '.join(enabled)}")
     print(f"Process: {PROCESS_DIR}")
     print(f"Machine: {MACHINE_DIR}")
     print(f"Filament: {FILAMENT_DIR}")
     print()
+
+    if not enabled:
+        print("ERROR: No printers enabled. Edit ENABLED_PRINTERS in generate.py.")
+        sys.exit(1)
 
     # Always backup first
     print("Creating backup...")
@@ -1595,6 +1942,32 @@ def main():
         return
 
     action = "DRY RUN" if dry_run else "Generating"
+
+    # --clean: delete all existing profiles before generating
+    if do_clean:
+        if dry_run:
+            print("[DRY RUN] Would clean all existing profiles...")
+            clean_all_profiles(dry_run=True)
+            print()
+        else:
+            if auto_yes:
+                confirmed = True
+            elif sys.stdin.isatty():
+                resp = input("WARNING: --clean will delete ALL existing Brian/B profiles. Continue? [y/N] ")
+                confirmed = resp.strip().lower() in ("y", "yes")
+            else:
+                print("ERROR: --clean requires interactive confirmation. Pass --yes to skip.")
+                print("       (stdin is not a TTY)")
+                sys.exit(1)
+
+            if confirmed:
+                print("Cleaning all existing profiles...")
+                cleaned = clean_all_profiles(dry_run=False)
+                print(f"  Deleted {cleaned} files.")
+                print()
+            else:
+                print("Clean cancelled.")
+                return
 
     # Clean up old system vendor if it exists
     cleaned = cleanup_system_vendor(dry_run=dry_run)
@@ -1608,7 +1981,7 @@ def main():
     print(f"  {'Would generate' if dry_run else 'Generated'} {machine_count} machine profiles.")
     print()
 
-    # Update filament profiles (clear compatible_printers)
+    # Generate filament profiles
     print(f"{action} filament profiles...")
     filament_count = generate_filament_profiles(dry_run=dry_run)
     print(f"  {'Would update' if dry_run else 'Updated'} {filament_count} filament profiles.")
@@ -1618,6 +1991,11 @@ def main():
     print(f"{action} process profiles: {len(PRINTERS)} printers × {len(NOZZLE_SIZES)} nozzles × {len(MATERIAL_MODES)} modes")
     process_count = generate_all(dry_run=dry_run)
     print(f"  {'Would generate' if dry_run else 'Generated'} {process_count} process profiles.")
+    print()
+
+    # Patch OrcaSlicer.conf global settings
+    print(f"{action} OrcaSlicer.conf tweaks...")
+    patch_orca_conf(dry_run=dry_run)
     print()
 
     total = machine_count + process_count
