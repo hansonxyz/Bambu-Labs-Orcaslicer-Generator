@@ -36,7 +36,7 @@ Each printer supports 0.2mm, 0.4mm, 0.6mm, and 0.8mm nozzle sizes.
 | Profile | Purpose |
 |---------|---------|
 | **PLA** | Conservative everyday default. Works with all PLA brands and geometries. |
-| **PLA Fast** | Near-stock speeds with targeted quality reductions. Good benchy quality. |
+| **PLA Fast** | Near-stock speeds for faster prints while keeping good visual accuracy. |
 | **PETG/ABS** | Slow and careful. Tuned for PETG's stringy nature and slow first layer. |
 | **PLA Silk** | Low acceleration for uniform shimmer across the entire surface. |
 | **PLA Draft** | Maximum speed, minimum structure. Shape preview only. |
