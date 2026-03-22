@@ -1,18 +1,8 @@
 # Bambu Lab OrcaSlicer Profile Generator
 
-An algorithmic profile generator for [OrcaSlicer](https://github.com/SoftFever/OrcaSlicer) that creates a complete set of tuned process, machine, and filament profiles for Bambu Lab 3D printers. Built for reliability over speed.
+A curated set of pre-tested, opinionated [OrcaSlicer](https://github.com/SoftFever/OrcaSlicer) profiles for Bambu Lab 3D printers, distributed as a generator. These are the settings I personally use on my own printers, tuned for reliability over speed.
 
-## The Problem
-
-OrcaSlicer's profile management is painful:
-
-- **Tedious manual entry** across dozens of settings for each printer/nozzle/material combination
-- **Easy to overwrite** settings you've already dialed in
-- **Race condition** when two OrcaSlicer instances are open - whichever closes last wins
-- **No algorithmic relationship** between profiles - changing a philosophy (like "slow down all first layers") means editing every profile by hand
-- **Nozzle scaling** requires manually recalculating wall counts, layer heights, speeds, and shell thicknesses for each nozzle size
-
-This generator solves all of that. Define your preferences once as constants, and it produces every combination algorithmically.
+Rather than sharing static profile files that go stale, this generator produces a complete matrix of process, machine, and filament profiles for every combination of printer, nozzle size, and material mode - all from a single script with documented, research-backed constants. Enable your printers, run the script, and get a consistent set of profiles that are correctly scaled and cross-referenced.
 
 ## What It Generates
 
