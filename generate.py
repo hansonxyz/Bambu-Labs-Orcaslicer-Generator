@@ -30,7 +30,7 @@ compatibility across all PLA brands and irregular object geometries.
 - Reduce crossing walls (less stringing)
 - Gyroid infill at 10% on X1C (strongest per material, low accel to absorb shaking)
 - Crosshatch infill at 15% on A1M (less violent direction changes for gantry arm)
-- Ironing pre-configured but not enabled (ready for per-project use)
+- Ironing pre-configured for museum quality but not enabled (see IRONING section)
 - Flush into infill enabled (redirects purge into infill to reduce waste)
 - Shell thickness targets: top 1.0mm / bottom 0.8mm (PLA/Silk/Delicate/MM)
                            top 0.8mm / bottom 0.6mm (PLA Fast, PETG)
@@ -64,10 +64,13 @@ B PLA (default standard):
   - 2 walls, top 1.0mm / bottom 0.8mm shell targets
 
 B PLA Fast:
-  - 75% of BBL baseline speeds (150 outer, 225 inner, 200 infill)
-  - "We don't need to go 120mph in an 80" - slightly below max for reliability
-  - Used for on-site A1M prototyping where print time matters but failures are costly
+  - Balanced speed: visually accurate (good benchy) but faster than standard
+  - Outer wall 100mm/s (most conservative - biggest visual impact), inner 200, infill 175
+  - Outer wall accel halved to 5000 (community consensus for reducing ringing)
+  - Crosshatch infill on all printers (less vibration than gyroid at speed)
   - Thinner shells: top 0.8mm / bottom 0.6mm
+  - Ref: https://forum.bambulab.com/t/outer-wall-acceleration/192135
+  - Ref: https://forum.bambulab.com/t/easy-path-to-high-quality-150mm-s-print-speed/60639
 
 B PETG ABS:
   - All speeds 45mm/s - Brian's tested sweet spot for PETG
@@ -97,7 +100,7 @@ B PLA Delicate:
   - Ultra-conservative for small intricate parts (D&D minis, etc)
   - All speeds 45mm/s, all acceleration 500 mm/s²
   - Low accel prevents jolting that knocks over tiny fragile features
-  - 3 walls, cubic infill 12%, interlocking beam enabled
+  - 3 walls, cubic infill 15%, interlocking beam enabled
   - X1C: 20% speed reduction on top of base (speeds become ~36mm/s)
   - A1M: 35% speed reduction on top of base (speeds become ~29mm/s)
     - A1M Delicate accel cap: 1500 (tighter than general 5000)
@@ -108,6 +111,7 @@ B PLA MM (Multi-Material):
   - Intentionally conservative: colors bleeding, materials not sticking, prime tower
     issues all improve with slower speeds
   - Flush into infill (saves material) but NOT into support (needs clean surfaces)
+  - Cubic infill 15% (less wall deformation than gyroid, pattern doesn't align with walls)
   - Dynamic wall count: minimum 1.0mm wall thickness target (3 walls on 0.4mm,
     2 walls on 0.6/0.8mm nozzle where 2 walls already exceeds 1mm)
 
@@ -117,7 +121,7 @@ B PLA+PETG+PVA MM:
   - Zero support z-distance so PVA prints directly against model surface
   - Concentric support interface with zero spacing (solid PVA interface layer)
   - Very slow speeds (40-55mm/s) for precise multi-material deposition
-  - Same 1.0mm minimum wall thickness target as PLA MM
+  - Same 1.0mm minimum wall thickness target and cubic infill as PLA MM
 
 NOZZLE SCALING
 --------------
@@ -150,16 +154,73 @@ MACHINE PROFILES
 - Both gcode files are bundled as the single source of truth
 - See comment block above gcode loading functions for detailed change lists
 
+IRONING
+-------
+Pre-configured for museum quality but NOT enabled by default (user enables per-project).
+Settings tuned for maximum smoothness when ironing is explicitly desired.
+
+- Flow: 20% (BBL default 10% causes patchy gaps; community range 18-39%)
+- Spacing: 0.1mm (tightest practical; nozzle covers each point ~4x for uniform smoothing)
+- Speed: 80mm/s (slower than BBL default 30mm/s would need less flow, but 80mm/s with
+  20% flow is the sweet spot; avoids corner bump artifacts that occur at 150mm/s)
+- Ref: https://forum.bambulab.com/t/ironing-help/198091
+- Ref: https://forum.bambulab.com/t/why-is-my-ironing-patchy/75896
+- Ref: https://creativestudios.com/3d-printing/3d-printing---perfect-ironing-settings
+
 ORCASLICER.CONF PATCHES
 ------------------------
 - Flush multiplier: 0.85 (15% reduction, conservative, safe for all filaments)
+  BBL's auto-calculated volumes are ~57% higher than needed per community calibration.
+  0.85 is well within safe range for all filaments including silk and PVA.
+  Ref: https://forum.bambulab.com/t/ams-flushing-volumes-calibration-purge-reduction/37062
 - Printer names: "X1 Carbon" and "A1 Mini" (friendlier than serial-based defaults)
 - Known printer serials and access codes maintained for LAN mode
+
+COMMUNITY REFERENCES
+--------------------
+Key values chosen based on community research and consensus:
+
+Silk PLA acceleration (1500/2500 low accel, not high):
+  https://www.sovol3d.com/blogs/news/how-many-3d-print-top-layers-for-smooth-strong-results
+  https://www.creality.com/blog/pla-print-temperature
+
+A1M PLA bed temperature (57°C, not BBL's 60-65°C default):
+  https://forum.bambulab.com/t/wth-bed-temperature-for-a1-vs-p1s/51628
+  https://github.com/bambulab/BambuStudio/issues/4883
+
+ABS supertack plate temperature (90°C, was erroneously 35°C):
+  Community consensus for ABS bed temp on supertack/high-temp plate.
+
+PVA first layer temperature (215°C, lowered from 225°C):
+  PVA degrades and strings at high temps. Lower first layer reduces issues.
+
+PLA Wood max volumetric speed (2 mm³/s) and first layer temp (210°C):
+  Wood particles restrict flow and char at high temps, causing clogs.
+  https://colorfabb.com/blog/post/how-to-print-with-woodfill-filament
+
+Shell thickness targets (1.0mm top / 0.8mm bottom):
+  https://www.sovol3d.com/blogs/news/how-many-3d-print-top-layers-for-smooth-strong-results
+  https://www.hubs.com/knowledge-base/selecting-optimal-shell-and-infill-parameters-fdm-3d-printing/
+
+PLA Fast outer wall acceleration (5000, halved from 10000):
+  Community consensus: outer wall accel matters more than speed for surface quality.
+  https://forum.bambulab.com/t/outer-wall-acceleration/192135
+
+A1M start gcode optimizations (fan reduction, z-offset):
+  https://forum.bambulab.com/t/optimized-a1-mini-start-g-code-quick-and-quiet-version/116364
+
+Filament change travel speed reduction (F18000/F15000 -> F9000):
+  Conservative approach prioritizing reliability over toolchange speed.
+
+BVOH vs PVA comparison (BVOH superior but expensive):
+  https://support.bcn3d.com/knowledge/bvoh-vs-pva
+  https://help.prusa3d.com/article/water-soluble-materials-pva-bvoh_162860
 """
 
 import json
 import math
 import os
+import platform
 import shutil
 import sys
 import time
@@ -170,26 +231,65 @@ from pathlib import Path
 # PATHS
 # =============================================================================
 
-APPDATA = os.environ.get("APPDATA", "")
-ORCA_DIR = Path(APPDATA) / "OrcaSlicer"
 
-# User-level directories
-USER_PROCESS_DIR = ORCA_DIR / "user" / "default" / "process"
-USER_MACHINE_DIR = ORCA_DIR / "user" / "default" / "machine"
-USER_FILAMENT_DIR = ORCA_DIR / "user" / "default" / "filament"
+def _detect_orca_dir() -> Path:
+    """Detect OrcaSlicer config directory based on OS."""
+    system = platform.system()
+    if system == "Windows":
+        appdata = os.environ.get("APPDATA", "")
+        if appdata:
+            return Path(appdata) / "OrcaSlicer"
+        return Path.home() / "AppData" / "Roaming" / "OrcaSlicer"
+    elif system == "Darwin":  # macOS
+        return Path.home() / "Library" / "Application Support" / "OrcaSlicer"
+    elif system == "Linux":
+        # Check XDG first, then fallback
+        xdg = os.environ.get("XDG_CONFIG_HOME", "")
+        if xdg:
+            return Path(xdg) / "OrcaSlicer"
+        return Path.home() / ".config" / "OrcaSlicer"
+    else:
+        print(f"WARNING: Unknown OS '{system}', defaulting to current directory")
+        return Path("OrcaSlicer")
 
-# Output directories (user-level)
-PROCESS_DIR = USER_PROCESS_DIR
-MACHINE_DIR = USER_MACHINE_DIR
-FILAMENT_DIR = USER_FILAMENT_DIR
 
-# Legacy system vendor directory (for cleanup)
-BRIAN_VENDOR_DIR = ORCA_DIR / "system" / "Brian"
-BRIAN_VENDOR_MANIFEST = ORCA_DIR / "system" / "Brian.json"
+def _setup_paths(output_dir: Path = None):
+    """Configure all path globals. If output_dir is specified, profiles are
+    written there instead of the OrcaSlicer config directory."""
+    global ORCA_DIR, PROCESS_DIR, MACHINE_DIR, FILAMENT_DIR
+    global FILAMENT_BASE_SUBDIR
+    global ORCA_CONF_PATH
+
+    ORCA_DIR = _detect_orca_dir()
+
+    if output_dir:
+        # Write profiles to arbitrary directory (no OrcaSlicer.conf patching)
+        base = Path(output_dir)
+        PROCESS_DIR = base / "process"
+        MACHINE_DIR = base / "machine"
+        FILAMENT_DIR = base / "filament"
+    else:
+        # Write to OrcaSlicer user profile directories
+        PROCESS_DIR = ORCA_DIR / "user" / "default" / "process"
+        MACHINE_DIR = ORCA_DIR / "user" / "default" / "machine"
+        FILAMENT_DIR = ORCA_DIR / "user" / "default" / "filament"
+
+    FILAMENT_BASE_SUBDIR = FILAMENT_DIR / "base"
+
+    # OrcaSlicer.conf (only patched when not using --output-dir)
+    ORCA_CONF_PATH = ORCA_DIR / "OrcaSlicer.conf"
+
+
+# Initialize with defaults (may be reconfigured in main via --output-dir)
+ORCA_DIR = _detect_orca_dir()
+PROCESS_DIR = ORCA_DIR / "user" / "default" / "process"
+MACHINE_DIR = ORCA_DIR / "user" / "default" / "machine"
+FILAMENT_DIR = ORCA_DIR / "user" / "default" / "filament"
+FILAMENT_BASE_SUBDIR = FILAMENT_DIR / "base"
+ORCA_CONF_PATH = ORCA_DIR / "OrcaSlicer.conf"
 
 BACKUP_DIR = Path(__file__).parent / "backups"
 ORCA_PROFILE_VERSION = "1.10.0.35"
-FILAMENT_BASE_SUBDIR = USER_FILAMENT_DIR / "base"
 
 # =============================================================================
 # USER-MODIFIABLE: ENABLED PRINTERS
@@ -197,11 +297,154 @@ FILAMENT_BASE_SUBDIR = USER_FILAMENT_DIR / "base"
 # Set to True to enable, False to disable.
 # =============================================================================
 
+# =============================================================================
+# PROFILE GUIDE: CHOOSING THE RIGHT PROFILE
+#
+# PLA (Standard)
+#   Your everyday default. Use this for most PLA prints. Prioritizes
+#   reliability across all brands and geometries over speed. Good strength,
+#   clean surfaces, works well with irregular shapes and overhangs.
+#   When in doubt, use this one.
+#
+# PLA Fast
+#   For prints where speed matters and the geometry is forgiving - models
+#   with broad flat surfaces, simple curves, and consistent wall angles.
+#   Produces a visually accurate print (good benchy quality) but may show
+#   minor artifacts on very fine details or sharp overhangs. Not ideal for
+#   miniatures or parts with tiny contact patches on the build plate.
+#
+# PETG ABS
+#   For functional parts in PETG or ABS. Very conservative speeds tuned
+#   for PETG's tendency to string and droop. The extremely slow first layer
+#   is critical - do not increase it. Use this for anything structural:
+#   brackets, mounts, enclosures, mechanical parts. On the A1M this is
+#   the primary profile for 0.6mm nozzle portable/on-site work.
+#
+# PLA Silk
+#   For silk/shimmer PLA filaments. Low acceleration keeps extrusion
+#   perfectly uniform so the silk effect is consistent across the entire
+#   surface. Slower than standard but the visual result is worth it.
+#   Three walls help the shimmer look its best.
+#
+# PLA Draft
+#   Maximum speed, minimum structure. Use this to quickly visualize what
+#   an object will look like in 3D before committing to a full print.
+#   Single wall, thin top/bottom, tall layers. The result has essentially
+#   no structural integrity - it's a shape preview, not a usable part.
+#
+# PLA Delicate
+#   For small, intricate parts with fine features: D&D miniatures, jewelry
+#   prototypes, detailed figurines, or any model with features under ~3mm.
+#   Ultra-low acceleration prevents vibration from knocking over fragile
+#   features or distorting tiny details. Three walls and cubic infill give
+#   uniform strength even on very small cross-sections.
+#
+# PLA MM (Multi-Material)
+#   For multi-color PLA prints. Slowed down from standard to improve
+#   reliability of color changes and reduce color bleed between materials.
+#   Cubic infill minimizes wall deformation that could show through as
+#   visual artifacts on decorative multi-color surfaces.
+#
+# PLA+PETG+PVA MM
+#   The most conservative profile, for prints combining PLA, PETG, and
+#   dissolvable PVA support. Finer layer height and zero support gap
+#   maximize adhesion between materials that don't naturally bond well.
+#   Very slow to ensure precise deposition of each material.
+#
+# TPU (optional, enable in OPTIONAL_FILAMENTS)
+#   For flexible parts: phone cases, gaskets, bumpers, grips. Very slow
+#   speeds (30mm/s) and gentle acceleration are required - TPU is flexible
+#   and will jam if pushed too fast. Cannot use AMS; filament must be fed
+#   manually. Grid infill gives the most predictable flex behavior.
+#   NOTE: Community-consensus settings, not personally tested.
+#
+# ENCLOSURE NOTES (X1C / P1S)
+# ----------------------------
+# All X1C and P1S settings assume the enclosure is CLOSED during printing,
+# with the following exceptions:
+#
+# *** PETG REQUIRES THE LID TO BE REMOVED ***
+# *** Printing PETG with the enclosure fully closed WILL cause heat creep ***
+# *** in the hotend, leading to clogs and failed prints. Remove the top ***
+# *** lid (glass panel on X1C, plastic lid on P1S) before printing PETG. ***
+#
+# ABS and ASA require the enclosure closed (they warp without it).
+# PLA works either way but benefits from the chamber fan running (auto in gcode).
+#
+# MANUAL CONSIDERATIONS
+# ---------------------
+# These settings must be adjusted per-project in OrcaSlicer:
+#
+# Support:
+#   Support is DISABLED by default across all profiles. Enable it per-project
+#   as needed. The support configuration (spacing, z-distance, speeds) is
+#   pre-set consistently so behavior is predictable when you turn it on.
+#
+# Flush into infill (multi-material):
+#   Enabled by default to reduce waste. DISABLE this manually when printing
+#   with white, light-colored, or translucent filaments - the colored purge
+#   material routed into infill can show through thin walls. This is most
+#   visible on parts with 2 walls; 3-wall profiles (Silk, Delicate, MM)
+#   are largely immune.
+#
+# PVA/BVOH as support interface:
+#   When using dissolvable support, set the support interface filament to
+#   your PVA or BVOH slot in OrcaSlicer (e.g. filament slot 4). Use PVA
+#   only for the interface layers, NOT the bulk support structure - bulk
+#   support should use your primary PLA to save expensive PVA material.
+#   The PLA+PETG+PVA MM profile has this pre-configured (interface=slot 4).
+#
+# Brim:
+#   Disabled by default. Enable manually for parts with very small bed
+#   contact area or tall thin geometry that's prone to tipping. Most prints
+#   on supertack plate don't need it.
+#
+# Ironing:
+#   Pre-configured but not enabled. Turn on per-project for flat top
+#   surfaces that need a glossy finish (e.g. nameplates, signs, lids).
+#   Adds significant time - only use where the top surface matters.
+#
+# Build plate type:
+#   Plate temperatures are set per-filament-profile. If you switch plates,
+#   the correct temperature is applied automatically. No manual adjustment
+#   needed.
+#
+# Elephant foot compensation:
+#   Set to 0.15mm globally. If a first layer is too tight or too loose,
+#   adjust the Z-offset in the machine gcode (-0.02 for most plates,
+#   -0.04 for textured PEI) rather than changing this value.
+# =============================================================================
+
 ENABLED_PRINTERS = {
     "X1C": True,     # Bambu Lab X1 Carbon (enclosed CoreXY)
     "P1S": False,    # Bambu Lab P1S (enclosed CoreXY, no lidar)
     "A1":  False,    # Bambu Lab A1 (i3 gantry, 256mm bed)
     "A1M": True,     # Bambu Lab A1 Mini (i3 gantry, 180mm bed)
+}
+
+# =============================================================================
+# USER-MODIFIABLE: OPTIONAL FILAMENTS & PROFILES
+# Core filaments (PLA, PETG, ABS, PVA) are always generated.
+# Toggle optional specialty filaments and their associated process profiles.
+#
+# NOTE: PLA-CF, ASA, and TPU profiles are based on community consensus and
+# conservative optimizations but have NOT been personally tested by the author.
+# Please provide feedback if you use these and discover any issues.
+#
+# Enclosure requirements:
+#   ASA requires an enclosure (X1C/P1S only, will not generate for A1/A1M)
+#   PLA-CF and TPU do not require an enclosure
+#   *** PETG REQUIRES the enclosure lid to be REMOVED on X1C/P1S ***
+#   *** Printing PETG with the lid closed WILL cause heat creep and clogging ***
+# =============================================================================
+
+OPTIONAL_FILAMENTS = {
+    "PLA Silk": True,    # Shimmer PLA - needs own process profile (low accel)
+    "PLA Wood": True,    # Wood-fill PLA - uses PLA process, low volumetric speed
+    "PLA-CF":   False,   # Carbon fiber PLA - uses PLA process, needs hardened nozzle
+    "ASA":      False,   # UV-resistant ABS alt - uses PETG/ABS process, enclosure required
+    "TPU":      False,   # Flexible - needs own process profile (very slow)
+    "BVOH":     True,    # Dissolvable support - better than PVA, works with PETG
 }
 
 # =============================================================================
@@ -227,9 +470,11 @@ PRINTER_SUFFIX = {
 }
 
 # Filament profile suffix per printer (used in filament naming)
+# Each printer gets its own filament profiles even if values are shared,
+# so compatible_printers is always specific to that printer.
 FILAMENT_PRINTER_SUFFIX = {
-    "X1C": "",
-    "P1S": "",       # P1S shares X1C filament profiles (same enclosure behavior)
+    "X1C": " X1C",
+    "P1S": " P1S",
     "A1":  " A1",
     "A1M": " A1M",
 }
@@ -369,9 +614,9 @@ UNIVERSAL_OVERRIDES = {
     "bottom_shell_thickness": "0.8",
 
     # Ironing (configured, not enabled - user enables per project)
-    "ironing_flow": "26%",
-    "ironing_spacing": "0.2",
-    "ironing_speed": "150",
+    "ironing_flow": "20%",
+    "ironing_spacing": "0.1",
+    "ironing_speed": "80",
 
     # Support (configured, DISABLED by default - user enables per project)
     "enable_support": "0",
@@ -449,20 +694,27 @@ PLA_STANDARD = {
 }
 
 # --- PLA Fast ---
-# 75% of BBL baseline speeds. For faster prints with reasonable reliability.
-# "We don't need to go 120 mph in an 80."
+# Balanced speed: visually accurate (good benchy) but meaningfully faster than standard.
+# Outer wall gets extra conservative treatment since it's the most visible surface.
+# Uses crosshatch infill on all printers to reduce vibration at speed.
 PLA_FAST = {
-    "outer_wall_speed": "150",
-    "inner_wall_speed": "225",
-    "sparse_infill_speed": "200",
-    "internal_solid_infill_speed": "188",
-    "gap_infill_speed": "188",
-    "top_surface_speed": "150",
-    "travel_speed": "375",
-    # Acceleration
-    "outer_wall_acceleration": "10000",
-    "top_surface_acceleration": "3500",
-    "internal_solid_infill_acceleration": "5000",
+    "outer_wall_speed": "100",       # 50% of BBL - most impactful for visual quality
+    "inner_wall_speed": "200",       # 67% of BBL - hidden, can be fast
+    "sparse_infill_speed": "175",    # 65% of BBL - slowed for vibration
+    "internal_solid_infill_speed": "175",  # matches infill
+    "gap_infill_speed": "150",       # between walls, quality matters
+    "top_surface_speed": "120",      # visible surface, moderate
+    "support_speed": "120",          # faster than standard
+    "travel_speed": "350",           # 70% of BBL
+    # Acceleration - outer wall halved from standard for surface quality
+    "outer_wall_acceleration": "5000",
+    "top_surface_acceleration": "2500",
+    "internal_solid_infill_acceleration": "3000",
+    "travel_acceleration": "4000",
+    # Crosshatch on all printers for PLA Fast - less vibration than gyroid at speed
+    "sparse_infill_pattern": "crosshatch",
+    "sparse_infill_density": "15%",
+    "sparse_infill_acceleration": "3000",
     # Layer
     "layer_height": "0.20",
     # Shells - thinner than standard, faster print
@@ -471,11 +723,6 @@ PLA_FAST = {
     # Walls
     "wall_loops": "2",
     "ensure_vertical_shell_thickness": "ensure_moderate",
-}
-
-# PLA Fast gets higher travel on A1M (75% of A1M's 700 = 525)
-PLA_FAST_A1M_EXTRA = {
-    "travel_speed": "525",
 }
 
 # --- PETG/ABS ---
@@ -612,7 +859,7 @@ PLA_DELICATE = {
     "wall_loops": "3",
     # Cubic infill - more uniform than gyroid for tiny parts
     "sparse_infill_pattern": "cubic",
-    "sparse_infill_density": "12%",
+    "sparse_infill_density": "15%",
     # Extra features for small parts
     "interlocking_beam": "1",
     "skirt_loops": "2",
@@ -642,6 +889,9 @@ PLA_MM = {
     "travel_acceleration": "2500",
     # Layer
     "layer_height": "0.20",
+    # Cubic infill - less wall deformation than gyroid, pattern doesn't align with walls
+    "sparse_infill_pattern": "cubic",
+    "sparse_infill_density": "15%",
     # Wall thickness target: 1mm minimum for color separation (calculated dynamically)
     "min_wall_thickness": "1.0",
     # MM-specific
@@ -680,6 +930,9 @@ PLA_PETG_PVA_MM = {
     "travel_acceleration": "2500",
     # Finer layer height for inter-material adhesion
     "layer_height": "0.18",
+    # Cubic infill - less wall deformation than gyroid, pattern doesn't align with walls
+    "sparse_infill_pattern": "cubic",
+    "sparse_infill_density": "15%",
     # Wall thickness target: 1mm minimum (calculated dynamically)
     "min_wall_thickness": "1.0",
     # MM-specific - PVA support settings
@@ -702,17 +955,73 @@ PLA_PETG_PVA_MM = {
     "initial_layer_line_width": "105%",
 }
 
+# --- TPU ---
+# Very slow, gentle settings for flexible filament.
+# TPU jams easily with fast moves or aggressive retraction.
+# Cannot use AMS - must be fed manually.
+# Community consensus: 25-35mm/s walls, minimal retraction, low accel.
+# Ref: https://wiki.bambulab.com/en/knowledge-sharing/tpu-printing-guide
+# Ref: https://forum.bambulab.com/t/what-is-your-tpu-setting-on-bambu-lab-studio/3890
+TPU = {
+    "outer_wall_speed": "30",
+    "inner_wall_speed": "35",
+    "sparse_infill_speed": "40",
+    "internal_solid_infill_speed": "35",
+    "gap_infill_speed": "30",
+    "top_surface_speed": "30",
+    "support_speed": "30",
+    "support_interface_speed": "25",
+    "travel_speed": "120",
+    # Very gentle acceleration - TPU is flexible and bounces with fast moves
+    "default_acceleration": "1500",
+    "outer_wall_acceleration": "1000",
+    "inner_wall_acceleration": "1500",
+    "top_surface_acceleration": "1000",
+    "internal_solid_infill_acceleration": "1500",
+    "sparse_infill_acceleration": "1500",
+    "travel_acceleration": "2000",
+    # Slow first layer for adhesion
+    "initial_layer_speed": "15",
+    "initial_layer_infill_speed": "20",
+    # Layer
+    "layer_height": "0.20",
+    # Shells - standard thickness
+    "top_shell_thickness": "1.0",
+    "bottom_shell_thickness": "0.8",
+    # Walls
+    "wall_loops": "2",
+    "ensure_vertical_shell_thickness": "ensure_moderate",
+    # TPU is flexible so gyroid/crosshatch doesn't matter for vibration,
+    # but grid gives the most predictable flex behavior
+    "sparse_infill_pattern": "grid",
+    "sparse_infill_density": "15%",
+}
+
 # Registry of all material modes
-MATERIAL_MODES = {
-    "PLA": PLA_STANDARD,  # Was "PLA Standard", renamed to just "PLA"
+# Core modes are always generated. Optional modes check OPTIONAL_FILAMENTS.
+CORE_MATERIAL_MODES = {
+    "PLA": PLA_STANDARD,
     "PLA Fast": PLA_FAST,
     "PETG ABS": PETG_ABS,
-    "PLA Silk": PLA_SILK,
     "PLA Draft": PLA_DRAFT,
     "PLA Delicate": PLA_DELICATE,
     "PLA MM": PLA_MM,
     "PLA+PETG+PVA MM": PLA_PETG_PVA_MM,
 }
+
+# Optional modes: (mode_dict, optional_filament_key_or_None)
+# If key is None, always included. If key is set, only included when that
+# optional filament is enabled.
+OPTIONAL_MATERIAL_MODES = {
+    "PLA Silk": (PLA_SILK, "PLA Silk"),
+    "TPU": (TPU, "TPU"),
+}
+
+# Build active material modes from core + enabled optionals
+MATERIAL_MODES = dict(CORE_MATERIAL_MODES)
+for mode_name, (mode_dict, opt_key) in OPTIONAL_MATERIAL_MODES.items():
+    if opt_key is None or OPTIONAL_FILAMENTS.get(opt_key, False):
+        MATERIAL_MODES[mode_name] = mode_dict
 
 # =============================================================================
 # FILAMENT PROFILES
@@ -1086,19 +1395,173 @@ FILAMENT_B_PLA_WOOD_OVERRIDES = {
     "nozzle_temperature_initial_layer": ["210"],  # high temp chars wood particles and clogs
 }
 
-# Registry: name -> (base_data, parent_name_or_None, printers_list_or_None)
-# If parent_name is set, the profile merges parent data + overrides
-# If printers is None, generate for all printers. Otherwise only listed ones.
-# ABS is X1C-only (needs enclosure). PVA is X1C-only (used in enclosed MM setups).
-FILAMENT_REGISTRY = {
+# Child filament: overrides on top of B PLA for carbon fiber PLA
+# Ref: https://bambulab.com/en-us/filament/pla-cf
+# NOTE: Requires hardened steel nozzle (CF is abrasive)
+FILAMENT_B_PLA_CF_OVERRIDES = {
+    "filament_cost": ["28"],
+    "filament_max_volumetric_speed": ["8"],  # CF particles restrict flow vs PLA's 10
+    "filament_retraction_length": ["0.8"],   # slightly more than PLA's 0.75
+    "filament_flow_ratio": ["0.95"],         # CF is slightly less consistent
+    "nozzle_temperature": ["230"],           # higher than PLA (220-240 range, conservative)
+    "nozzle_temperature_initial_layer": ["225"],
+    "required_nozzle_HRC": ["40"],           # hardened steel required
+}
+
+# ASA: UV-resistant ABS alternative. Enclosure required.
+# Ref: https://forum.bambulab.com/t/asa-settings/76407
+# Ref: https://wiki.bambulab.com/en/filament/abs_asa_pc
+FILAMENT_B_ASA = {
+    **_FILAMENT_COMMON,
+    "filament_type": ["ASA"],
+    "filament_density": ["1.07"],
+    "filament_cost": ["25"],
+    "filament_flow_ratio": ["0.95"],
+    "filament_max_volumetric_speed": ["12"],  # slightly less than ABS's 16
+    # Retraction
+    "filament_z_hop": ["0.15"],
+    "filament_z_hop_types": ["Spiral Lift"],
+    # Temps - similar to ABS
+    "nozzle_temperature": ["250"],
+    "nozzle_temperature_initial_layer": ["250"],
+    "nozzle_temperature_range_high": ["270"],
+    "nozzle_temperature_range_low": ["240"],
+    "cool_plate_temp": ["0"],
+    "cool_plate_temp_initial_layer": ["0"],
+    "eng_plate_temp": ["100"],
+    "eng_plate_temp_initial_layer": ["100"],
+    "hot_plate_temp": ["100"],
+    "hot_plate_temp_initial_layer": ["100"],
+    "supertack_plate_temp": ["90"],
+    "supertack_plate_temp_initial_layer": ["90"],
+    "textured_cool_plate_temp": ["0"],
+    "textured_cool_plate_temp_initial_layer": ["0"],
+    "textured_plate_temp": ["100"],
+    "textured_plate_temp_initial_layer": ["100"],
+    "temperature_vitrification": ["100"],
+    # Fan - low, same philosophy as ABS
+    "activate_air_filtration": ["0"],
+    "additional_cooling_fan_speed": ["0"],
+    "complete_print_exhaust_fan_speed": ["70"],
+    "during_print_exhaust_fan_speed": ["70"],
+    "enable_overhang_bridge_fan": ["1"],
+    "fan_cooling_layer_time": ["30"],
+    "fan_max_speed": ["50"],
+    "fan_min_speed": ["10"],
+    "full_fan_speed_layer": ["0"],
+    "close_fan_the_first_x_layers": ["3"],
+    "overhang_fan_speed": ["60"],
+    "overhang_fan_threshold": ["25%"],
+    "reduce_fan_stop_start_freq": ["1"],
+    "support_material_interface_fan_speed": ["-1"],
+    # Cooling
+    "slow_down_for_layer_cooling": ["1"],
+    "slow_down_layer_time": ["12"],
+    "slow_down_min_speed": ["20"],
+    # Pressure advance
+    "enable_pressure_advance": ["0"],
+    "pressure_advance": ["0.02"],
+    # Gcode - same as ABS
+    "filament_start_gcode": ["; Filament gcode\n{if activate_air_filtration[current_extruder] && support_air_filtration}\nM106 P3 S{during_print_exhaust_fan_speed_num[current_extruder]} \n{endif}"],
+    "filament_end_gcode": ["; filament end gcode \n; cham fan full\nM106 P3 S255\n\n"],
+}
+
+# TPU: Flexible filament. Cannot use AMS.
+# Ref: https://wiki.bambulab.com/en/knowledge-sharing/tpu-printing-guide
+# Ref: https://forum.bambulab.com/t/what-is-your-tpu-setting-on-bambu-lab-studio/3890
+FILAMENT_B_TPU = {
+    **_FILAMENT_COMMON,
+    "filament_type": ["TPU"],
+    "filament_density": ["1.21"],
+    "filament_cost": ["30"],
+    "filament_flow_ratio": ["1.0"],  # TPU needs full flow
+    "filament_max_volumetric_speed": ["2.5"],  # very slow, flexible filament
+    # Retraction - minimal, TPU jams with too much retraction
+    "filament_retraction_length": ["0.5"],
+    "filament_retraction_speed": ["20"],
+    "filament_deretraction_speed": ["15"],
+    "filament_retract_before_wipe": ["0%"],
+    "filament_wipe": ["0"],
+    "filament_wipe_distance": ["0"],
+    "filament_z_hop": ["0.2"],
+    "filament_z_hop_types": ["Spiral Lift"],
+    # Temps
+    "nozzle_temperature": ["225"],
+    "nozzle_temperature_initial_layer": ["220"],
+    "nozzle_temperature_range_high": ["240"],
+    "nozzle_temperature_range_low": ["210"],
+    "cool_plate_temp": ["50"],
+    "cool_plate_temp_initial_layer": ["50"],
+    "eng_plate_temp": ["50"],
+    "eng_plate_temp_initial_layer": ["50"],
+    "hot_plate_temp": ["50"],
+    "hot_plate_temp_initial_layer": ["50"],
+    "supertack_plate_temp": ["50"],
+    "supertack_plate_temp_initial_layer": ["50"],
+    "textured_cool_plate_temp": ["50"],
+    "textured_cool_plate_temp_initial_layer": ["50"],
+    "textured_plate_temp": ["50"],
+    "textured_plate_temp_initial_layer": ["50"],
+    "temperature_vitrification": ["60"],
+    # Fan - moderate
+    "activate_air_filtration": ["0"],
+    "additional_cooling_fan_speed": ["0"],
+    "complete_print_exhaust_fan_speed": ["0"],
+    "during_print_exhaust_fan_speed": ["0"],
+    "enable_overhang_bridge_fan": ["1"],
+    "fan_cooling_layer_time": ["100"],
+    "fan_max_speed": ["50"],
+    "fan_min_speed": ["30"],
+    "full_fan_speed_layer": ["3"],
+    "close_fan_the_first_x_layers": ["1"],
+    "overhang_fan_speed": ["80"],
+    "overhang_fan_threshold": ["25%"],
+    "reduce_fan_stop_start_freq": ["0"],
+    "support_material_interface_fan_speed": ["-1"],
+    # Cooling
+    "slow_down_for_layer_cooling": ["1"],
+    "slow_down_layer_time": ["16"],
+    "slow_down_min_speed": ["10"],
+    # Pressure advance
+    "enable_pressure_advance": ["0"],
+    "pressure_advance": ["0.02"],
+    # Gcode
+    "filament_start_gcode": [""],
+    "filament_end_gcode": [""],
+}
+
+# =============================================================================
+# FILAMENT REGISTRY
+# =============================================================================
+# Format: name -> (data, parent_name_or_None, allowed_printers_or_None)
+# - If parent_name is set, profile merges parent data + overrides
+# - If allowed_printers is None, generate for all enabled printers
+# - Enclosure-required filaments list only corexy printers
+#
+# Core filaments are always generated. Optional filaments check OPTIONAL_FILAMENTS.
+
+_CORE_FILAMENTS = {
     "B PLA":      (FILAMENT_B_PLA, None, None),
     "B PETG":     (FILAMENT_B_PETG, None, None),
-    "B ABS":      (FILAMENT_B_ABS, None, ["X1C"]),
+    "B ABS":      (FILAMENT_B_ABS, None, ["X1C", "P1S"]),  # enclosure required
     "B PVA":      (FILAMENT_B_PVA, None, None),
-    "B BVOH":     (FILAMENT_B_BVOH, None, None),
-    "B PLA Silk": (FILAMENT_B_PLA_SILK_OVERRIDES, "B PLA", None),
-    "B PLA Wood": (FILAMENT_B_PLA_WOOD_OVERRIDES, "B PLA", None),
 }
+
+_OPTIONAL_FILAMENTS = {
+    # (data, parent, allowed_printers, optional_key)
+    "B PLA Silk": (FILAMENT_B_PLA_SILK_OVERRIDES, "B PLA", None, "PLA Silk"),
+    "B PLA Wood": (FILAMENT_B_PLA_WOOD_OVERRIDES, "B PLA", None, "PLA Wood"),
+    "B PLA-CF":   (FILAMENT_B_PLA_CF_OVERRIDES, "B PLA", None, "PLA-CF"),
+    "B ASA":      (FILAMENT_B_ASA, None, ["X1C", "P1S"], "ASA"),  # enclosure required
+    "B TPU":      (FILAMENT_B_TPU, None, None, "TPU"),
+    "B BVOH":     (FILAMENT_B_BVOH, None, None, "BVOH"),
+}
+
+# Build active registry from core + enabled optionals
+FILAMENT_REGISTRY = dict(_CORE_FILAMENTS)
+for name, (data, parent, printers, opt_key) in _OPTIONAL_FILAMENTS.items():
+    if OPTIONAL_FILAMENTS.get(opt_key, False):
+        FILAMENT_REGISTRY[name] = (data, parent, printers)
 
 # A1M z_hop increase (mm) over X1C baseline
 A1M_ZHOP_INCREASE = 0.05
@@ -1377,9 +1840,6 @@ def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
     profile.update(deepcopy(PRINTER_DELTAS[group]))
     profile.update(deepcopy(MATERIAL_MODES[mode_name]))
 
-    if mode_name == "PLA Fast" and group == "i3":
-        profile.update(PLA_FAST_A1M_EXTRA)
-
     if group == "i3":
         _raise_infill_to_max_speed(profile)
 
@@ -1446,6 +1906,15 @@ def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
 
     # --- Step 8: i3 hard caps (must be last) ---
     if group == "i3":
+        # PLA and PLA Fast on i3: enforce 1mm minimum wall thickness
+        # (gantry arm benefits from thicker walls for rigidity)
+        if mode_name in ("PLA", "PLA Fast"):
+            min_thick = 1.0
+            walls = int(profile.get("wall_loops", "2"))
+            while outer_w + (walls - 1) * inner_w < min_thick:
+                walls += 1
+            profile["wall_loops"] = str(walls)
+
         caps = {**I3_CAPS["_default"]}
         mode_caps = I3_CAPS.get(mode_name)
         if mode_caps:
@@ -1563,18 +2032,12 @@ def generate_filament_profiles(dry_run: bool = False):
         else:
             full_data = deepcopy(fil_data)
 
-        # Generate one per unique filament suffix (avoids duplicates for
-        # printers that share the same filament suffix, e.g. X1C and P1S)
-        seen_suffixes = set()
+        # Generate one per enabled printer
         for printer_key, printer_cfg in PRINTERS.items():
             if allowed_printers and printer_key not in allowed_printers:
                 continue
 
             suffix = FILAMENT_PRINTER_SUFFIX[printer_key]
-            if suffix in seen_suffixes:
-                continue
-            seen_suffixes.add(suffix)
-
             group = PRINTER_GROUP[printer_key]
             profile_name = f"{filament_name}{suffix}"
 
@@ -1585,13 +2048,11 @@ def generate_filament_profiles(dry_run: bool = False):
             profile["is_custom_defined"] = "0"
             profile["version"] = ORCA_PROFILE_VERSION
 
-            # Set compatible_printers to all nozzle variants for all printers
-            # that share this filament suffix
-            compat = []
-            for pk, pcfg in PRINTERS.items():
-                if FILAMENT_PRINTER_SUFFIX[pk] == suffix:
-                    for nozzle in NOZZLE_SIZES:
-                        compat.append(pcfg["machine_base_profiles"][nozzle][0])
+            # Set compatible_printers to all nozzle variants for this printer
+            compat = [
+                printer_cfg["machine_base_profiles"][nozzle][0]
+                for nozzle in NOZZLE_SIZES
+            ]
             profile["compatible_printers"] = compat
 
             # i3 printers: slightly more retraction for the gantry arm
@@ -1708,16 +2169,16 @@ def generate_machine_profiles(dry_run: bool = False):
 
 def create_backup():
     """Backup user profile directories with timestamp."""
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    timestamp = time.strftime("%Y%m%d_%H%M%S") + f"_{int(time.time() * 1000) % 1000:03d}"
     backup_path = BACKUP_DIR / timestamp
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
     total_files = 0
 
     dirs_to_backup = [
-        ("process", USER_PROCESS_DIR),
-        ("machine", USER_MACHINE_DIR),
-        ("filament", USER_FILAMENT_DIR),
+        ("process", PROCESS_DIR),
+        ("machine", MACHINE_DIR),
+        ("filament", FILAMENT_DIR),
     ]
 
     for subdir_name, subdir_path in dirs_to_backup:
@@ -1872,24 +2333,6 @@ def patch_orca_conf(dry_run: bool = False):
             f.write("\n")
 
 
-def cleanup_system_vendor(dry_run: bool = False):
-    """Remove the old system/Brian vendor directory if it exists."""
-    cleaned = 0
-    if BRIAN_VENDOR_DIR.exists():
-        if dry_run:
-            print(f"  [DRY RUN] Would remove: {BRIAN_VENDOR_DIR}")
-        else:
-            shutil.rmtree(BRIAN_VENDOR_DIR)
-        cleaned += 1
-    if BRIAN_VENDOR_MANIFEST.exists():
-        if dry_run:
-            print(f"  [DRY RUN] Would remove: {BRIAN_VENDOR_MANIFEST}")
-        else:
-            BRIAN_VENDOR_MANIFEST.unlink()
-        cleaned += 1
-    return cleaned
-
-
 def clean_all_profiles(dry_run: bool = False):
     """Delete ALL user process, machine, and filament profiles (Brian-generated ones)."""
     cleaned = 0
@@ -1919,10 +2362,27 @@ def main():
     do_clean = "--clean" in sys.argv
     auto_yes = "--yes" in sys.argv
 
+    # Parse --output-dir <path>
+    output_dir = None
+    if "--output-dir" in sys.argv:
+        idx = sys.argv.index("--output-dir")
+        if idx + 1 < len(sys.argv):
+            output_dir = sys.argv[idx + 1]
+        else:
+            print("ERROR: --output-dir requires a path argument")
+            sys.exit(1)
+
+    # Reconfigure paths if output dir specified or to pick up OS detection
+    _setup_paths(output_dir)
+
     enabled = [k for k, v in ENABLED_PRINTERS.items() if v]
 
-    print(f"OrcaSlicer Profile Generator")
+    print(f"OrcaSlicer Profile Generator ({platform.system()})")
     print(f"Enabled printers: {', '.join(enabled)}")
+    if output_dir:
+        print(f"Output dir: {output_dir}")
+    else:
+        print(f"OrcaSlicer dir: {ORCA_DIR}")
     print(f"Process: {PROCESS_DIR}")
     print(f"Machine: {MACHINE_DIR}")
     print(f"Filament: {FILAMENT_DIR}")
@@ -1932,10 +2392,11 @@ def main():
         print("ERROR: No printers enabled. Edit ENABLED_PRINTERS in generate.py.")
         sys.exit(1)
 
-    # Always backup first
-    print("Creating backup...")
-    create_backup()
-    print()
+    # Backup (skip when using --output-dir since we're not touching OrcaSlicer)
+    if not output_dir:
+        print("Creating backup...")
+        create_backup()
+        print()
 
     if backup_only:
         print("Backup-only mode. Done.")
@@ -1969,12 +2430,6 @@ def main():
                 print("Clean cancelled.")
                 return
 
-    # Clean up old system vendor if it exists
-    cleaned = cleanup_system_vendor(dry_run=dry_run)
-    if cleaned:
-        print(f"Cleaned up old system/Brian vendor ({cleaned} items).")
-        print()
-
     # Generate machine profiles
     print(f"{action} machine profiles: {len(PRINTERS)} printers × {len(NOZZLE_SIZES)} nozzles")
     machine_count = generate_machine_profiles(dry_run=dry_run)
@@ -1993,10 +2448,11 @@ def main():
     print(f"  {'Would generate' if dry_run else 'Generated'} {process_count} process profiles.")
     print()
 
-    # Patch OrcaSlicer.conf global settings
-    print(f"{action} OrcaSlicer.conf tweaks...")
-    patch_orca_conf(dry_run=dry_run)
-    print()
+    # Patch OrcaSlicer.conf global settings (skip with --output-dir)
+    if not output_dir:
+        print(f"{action} OrcaSlicer.conf tweaks...")
+        patch_orca_conf(dry_run=dry_run)
+        print()
 
     total = machine_count + process_count
     print(f"Total: {total} profiles + {filament_count} filament updates.")
