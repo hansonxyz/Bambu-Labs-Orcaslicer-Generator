@@ -38,7 +38,7 @@ Each printer supports 0.2mm, 0.4mm, 0.6mm, and 0.8mm nozzle sizes.
 | **PLA** | Conservative everyday default. Works with all PLA brands and geometries. |
 | **PLA Fast** | Near-stock speeds with targeted quality reductions. Good benchy quality. |
 | **PETG/ABS** | Slow and careful. Tuned for PETG's stringy nature and slow first layer. |
-| **PLA Silk** | Low acceleration for uniform shimmer. Silk additives show flow inconsistencies. |
+| **PLA Silk** | Low acceleration for uniform shimmer across the entire surface. |
 | **PLA Draft** | Maximum speed, minimum structure. Shape preview only. |
 | **PLA Delicate** | Ultra-conservative for miniatures and tiny features. Very low acceleration. |
 | **PLA MM** | Multi-material color prints. Slower for reliable color changes. |
