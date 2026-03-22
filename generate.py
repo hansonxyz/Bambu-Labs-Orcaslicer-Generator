@@ -2,14 +2,19 @@
 OrcaSlicer Profile Generator
 =============================
 
-Generates process profiles, machine profiles, and filament profiles for
-Brian's Bambu Lab X1 Carbon (X1C) and A1 Mini (A1M) printers across
-0.2/0.4/0.6/0.8mm nozzle sizes and 8 material modes.
+Generates a complete set of tuned OrcaSlicer profiles (process, machine, and
+filament) for Bambu Lab 3D printers across all nozzle sizes and material modes.
 
-Outputs: 8 machine profiles, 64 process profiles, ~13 filament profiles.
-Run `python generate.py` to backup + regenerate everything.
+USAGE
+-----
+1. Edit ENABLED_PRINTERS below to enable your printer(s)
+2. Edit OPTIONAL_FILAMENTS below to enable any specialty filaments you use
+3. Close OrcaSlicer
+4. Run: python generate.py
 
-Also patches OrcaSlicer.conf for flush multiplier (0.85) and printer names.
+That's it. Open OrcaSlicer and your profiles are ready. Run it again any time
+OrcaSlicer overwrites your settings. Use --clean --yes for a full reset.
+See README.md for more options.
 
 BASELINE PHILOSOPHY
 -------------------
@@ -227,70 +232,6 @@ import time
 from copy import deepcopy
 from pathlib import Path
 
-# =============================================================================
-# PATHS
-# =============================================================================
-
-
-def _detect_orca_dir() -> Path:
-    """Detect OrcaSlicer config directory based on OS."""
-    system = platform.system()
-    if system == "Windows":
-        appdata = os.environ.get("APPDATA", "")
-        if appdata:
-            return Path(appdata) / "OrcaSlicer"
-        return Path.home() / "AppData" / "Roaming" / "OrcaSlicer"
-    elif system == "Darwin":  # macOS
-        return Path.home() / "Library" / "Application Support" / "OrcaSlicer"
-    elif system == "Linux":
-        # Check XDG first, then fallback
-        xdg = os.environ.get("XDG_CONFIG_HOME", "")
-        if xdg:
-            return Path(xdg) / "OrcaSlicer"
-        return Path.home() / ".config" / "OrcaSlicer"
-    else:
-        print(f"WARNING: Unknown OS '{system}', defaulting to current directory")
-        return Path("OrcaSlicer")
-
-
-def _setup_paths(output_dir: Path = None):
-    """Configure all path globals. If output_dir is specified, profiles are
-    written there instead of the OrcaSlicer config directory."""
-    global ORCA_DIR, PROCESS_DIR, MACHINE_DIR, FILAMENT_DIR
-    global FILAMENT_BASE_SUBDIR
-    global ORCA_CONF_PATH
-
-    ORCA_DIR = _detect_orca_dir()
-
-    if output_dir:
-        # Write profiles to arbitrary directory (no OrcaSlicer.conf patching)
-        base = Path(output_dir)
-        PROCESS_DIR = base / "process"
-        MACHINE_DIR = base / "machine"
-        FILAMENT_DIR = base / "filament"
-    else:
-        # Write to OrcaSlicer user profile directories
-        PROCESS_DIR = ORCA_DIR / "user" / "default" / "process"
-        MACHINE_DIR = ORCA_DIR / "user" / "default" / "machine"
-        FILAMENT_DIR = ORCA_DIR / "user" / "default" / "filament"
-
-    FILAMENT_BASE_SUBDIR = FILAMENT_DIR / "base"
-
-    # OrcaSlicer.conf (only patched when not using --output-dir)
-    ORCA_CONF_PATH = ORCA_DIR / "OrcaSlicer.conf"
-
-
-# Initialize with defaults (may be reconfigured in main via --output-dir)
-ORCA_DIR = _detect_orca_dir()
-PROCESS_DIR = ORCA_DIR / "user" / "default" / "process"
-MACHINE_DIR = ORCA_DIR / "user" / "default" / "machine"
-FILAMENT_DIR = ORCA_DIR / "user" / "default" / "filament"
-FILAMENT_BASE_SUBDIR = FILAMENT_DIR / "base"
-ORCA_CONF_PATH = ORCA_DIR / "OrcaSlicer.conf"
-
-BACKUP_DIR = Path(__file__).parent / "backups"
-ORCA_PROFILE_VERSION = "1.10.0.35"
-
 
 # #############################################################################
 #
@@ -492,6 +433,64 @@ OPTIONAL_FILAMENTS = {
 #  you need to touch are ENABLED_PRINTERS and OPTIONAL_FILAMENTS above.
 #
 # #############################################################################
+
+
+# =============================================================================
+# PATHS (auto-detected from OS, reconfigurable via --output-dir)
+# =============================================================================
+
+
+def _detect_orca_dir() -> Path:
+    """Detect OrcaSlicer config directory based on OS."""
+    system = platform.system()
+    if system == "Windows":
+        appdata = os.environ.get("APPDATA", "")
+        if appdata:
+            return Path(appdata) / "OrcaSlicer"
+        return Path.home() / "AppData" / "Roaming" / "OrcaSlicer"
+    elif system == "Darwin":  # macOS
+        return Path.home() / "Library" / "Application Support" / "OrcaSlicer"
+    elif system == "Linux":
+        xdg = os.environ.get("XDG_CONFIG_HOME", "")
+        if xdg:
+            return Path(xdg) / "OrcaSlicer"
+        return Path.home() / ".config" / "OrcaSlicer"
+    else:
+        print(f"WARNING: Unknown OS '{system}', defaulting to current directory")
+        return Path("OrcaSlicer")
+
+
+def _setup_paths(output_dir: Path = None):
+    """Configure all path globals. If output_dir is specified, profiles are
+    written there instead of the OrcaSlicer config directory."""
+    global ORCA_DIR, PROCESS_DIR, MACHINE_DIR, FILAMENT_DIR
+    global FILAMENT_BASE_SUBDIR, ORCA_CONF_PATH
+
+    ORCA_DIR = _detect_orca_dir()
+
+    if output_dir:
+        base = Path(output_dir)
+        PROCESS_DIR = base / "process"
+        MACHINE_DIR = base / "machine"
+        FILAMENT_DIR = base / "filament"
+    else:
+        PROCESS_DIR = ORCA_DIR / "user" / "default" / "process"
+        MACHINE_DIR = ORCA_DIR / "user" / "default" / "machine"
+        FILAMENT_DIR = ORCA_DIR / "user" / "default" / "filament"
+
+    FILAMENT_BASE_SUBDIR = FILAMENT_DIR / "base"
+    ORCA_CONF_PATH = ORCA_DIR / "OrcaSlicer.conf"
+
+
+# Initialize with defaults (reconfigured in main() if --output-dir is used)
+ORCA_DIR = _detect_orca_dir()
+PROCESS_DIR = ORCA_DIR / "user" / "default" / "process"
+MACHINE_DIR = ORCA_DIR / "user" / "default" / "machine"
+FILAMENT_DIR = ORCA_DIR / "user" / "default" / "filament"
+FILAMENT_BASE_SUBDIR = FILAMENT_DIR / "base"
+ORCA_CONF_PATH = ORCA_DIR / "OrcaSlicer.conf"
+BACKUP_DIR = Path(__file__).parent / "backups"
+ORCA_PROFILE_VERSION = "1.10.0.35"
 
 
 # =============================================================================
