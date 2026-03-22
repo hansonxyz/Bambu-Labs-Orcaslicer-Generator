@@ -16,210 +16,9 @@ That's it. Open OrcaSlicer and your profiles are ready. Run it again any time
 OrcaSlicer overwrites your settings. Use --clean --yes for a full reset.
 See README.md for more options.
 
-BASELINE PHILOSOPHY
--------------------
-All profiles start from Bambu Lab's system defaults and apply a conservative
-override strategy. The guiding principle is "if it works at 300mm/s it works
-even better at 90mm/s." We trade speed for reliability and universal
-compatibility across all PLA brands and irregular object geometries.
-
-- Slow first layer (20mm/s speed, 25mm/s infill, 75 accel) for bed adhesion
-- Wider line widths (105% outer, 112% inner/infill) for strength and gap filling
-- Wall print order: inner/outer/inner (sandwich mode for best dimensional accuracy)
-- Seam on back of model (less visible than BBL's default "aligned")
-- No brim by default (enabled per-project)
-- Detect thin walls always on (BBL leaves this off, skipping thin features)
-- Elephant foot compensation 0.15mm (BBL A1M default was 0, corrected)
-- Support pre-configured but disabled (consistent settings when user enables)
-- Support on build plate only (interior support via manual painting)
-- Reduce crossing walls (less stringing)
-- Gyroid infill at 10% on X1C (strongest per material, low accel to absorb shaking)
-- Crosshatch infill at 15% on A1M (less violent direction changes for gantry arm)
-- Ironing pre-configured for museum quality but not enabled (see IRONING section)
-- Flush into infill enabled (redirects purge into infill to reduce waste)
-- Shell thickness targets: top 1.0mm / bottom 0.8mm (PLA/Silk/Delicate/MM)
-                           top 0.8mm / bottom 0.6mm (PLA Fast, PETG)
-  Layers calculated dynamically from targets, minimum 2 layers always (except Draft)
-
-PRINTER VARIANTS: X1C vs A1M
------------------------------
-The A1M has a cantilevered gantry arm instead of the X1C's rigid enclosed CoreXY.
-This fundamentally limits what the printer can handle.
-
-- A1M max print speed hard cap: 150mm/s (including travel)
-- A1M max acceleration hard cap: 5000 mm/s²
-- A1M infill: crosshatch instead of gyroid (less violent, gentler on gantry)
-- A1M infill accel: 3000 (capped below 5000 for stability on small parts)
-- A1M first layer: hard cap at 16/20 mm/s (speed/infill) for bed adhesion
-- A1M Delicate mode: accel cap 1500, travel cap 60, speeds 35% slower than base
-- A1M filament retraction: +0.1mm over X1C baseline
-- A1M plate temps for PLA: 57°C across all plates (X1C: 48°C, enclosure traps heat)
-- Both printers: z-offset gcode (-0.04 textured PEI, -0.02 everything else)
-- Both printers: custom gcode bundled as JSON files (single source of truth)
-
-MATERIAL MODES
---------------
-All modes share the universal baseline above. Each mode changes the speed/accel
-philosophy and structural settings for different use cases.
-
-B PLA (default standard):
-  - Conservative speeds: 60 outer wall, 90 inner wall, 65 infill
-  - High outer wall accel (10000) for Bambu input shaping on visible surfaces
-  - Works reliably across all PLA brands including cheap ones
-  - 2 walls, top 1.0mm / bottom 0.8mm shell targets
-
-B PLA Fast:
-  - Balanced speed: visually accurate (good benchy) but faster than standard
-  - Outer wall 100mm/s (most conservative - biggest visual impact), inner 200, infill 175
-  - Outer wall accel halved to 5000 (community consensus for reducing ringing)
-  - Crosshatch infill on all printers (less vibration than gyroid at speed)
-  - Thinner shells: top 0.8mm / bottom 0.6mm
-  - Ref: https://forum.bambulab.com/t/outer-wall-acceleration/192135
-  - Ref: https://forum.bambulab.com/t/easy-path-to-high-quality-150mm-s-print-speed/60639
-
-B PETG ABS:
-  - All speeds 45mm/s - Brian's tested sweet spot for PETG
-  - Very slow first layer: 12mm/s speed, 15mm/s infill (critical for PETG adhesion)
-  - All acceleration capped at 2500
-  - Alternate extra wall for PETG's weaker inter-layer bonding
-  - Overhang speeds all 30mm/s (PETG droops more)
-  - Thinner shells: top 0.8mm / bottom 0.6mm
-  - 0.8mm nozzle: 1 wall + alternate (already thick enough)
-  - Primary profile for 0.6mm nozzle functional prints on portable A1M
-
-B PLA Silk:
-  - Slower speeds (~80% of PLA): 48 outer, 70 inner
-  - LOW acceleration (1500 outer/top, 2500 inner/infill) - NOT high
-  - Silk PLA additives make flow inconsistencies highly visible as blotchy shimmer
-  - Low accel avoids nozzle pressure spikes that cause uneven extrusion
-  - 3 walls for better silk surface quality
-
-B PLA Draft:
-  - As fast as the printer allows: 125mm/s everything
-  - Single wall + alternate, 1 bottom layer, max layer height for nozzle
-  - Just need to see what the shape looks like in 3D, nothing else matters
-  - Tree support for easy removal, cubic infill at 7%
-  - 0.2mm nozzle exception: 2 walls, no alternate, 2 top/bottom layers
-
-B PLA Delicate:
-  - Ultra-conservative for small intricate parts (D&D minis, etc)
-  - All speeds 45mm/s, all acceleration 500 mm/s²
-  - Low accel prevents jolting that knocks over tiny fragile features
-  - 3 walls, cubic infill 15%, interlocking beam enabled
-  - X1C: 20% speed reduction on top of base (speeds become ~36mm/s)
-  - A1M: 35% speed reduction on top of base (speeds become ~29mm/s)
-    - A1M Delicate accel cap: 1500 (tighter than general 5000)
-    - A1M Delicate travel cap: 60mm/s
-
-B PLA MM (Multi-Material):
-  - Slower than PLA standard (75/55/60 inner/infill/outer) with 2500 accel cap
-  - Intentionally conservative: colors bleeding, materials not sticking, prime tower
-    issues all improve with slower speeds
-  - Flush into infill (saves material) but NOT into support (needs clean surfaces)
-  - Cubic infill 15% (less wall deformation than gyroid, pattern doesn't align with walls)
-  - Dynamic wall count: minimum 1.0mm wall thickness target (3 walls on 0.4mm,
-    2 walls on 0.6/0.8mm nozzle where 2 walls already exceeds 1mm)
-
-B PLA+PETG+PVA MM:
-  - Most conservative profile: PLA and PETG don't naturally adhere
-  - 0.18mm layer height for more inter-material bonding surface area
-  - Zero support z-distance so PVA prints directly against model surface
-  - Concentric support interface with zero spacing (solid PVA interface layer)
-  - Very slow speeds (40-55mm/s) for precise multi-material deposition
-  - Same 1.0mm minimum wall thickness target and cubic infill as PLA MM
-
-NOZZLE SCALING
---------------
-- Layer height: 50% of nozzle diameter (draft: ~60%, PVA MM: ~45%)
-- Wall loops: +2 on 0.2mm nozzle to maintain minimum wall thickness
-  (or dynamically calculated from min_wall_thickness target for MM profiles)
-- Speed: 0.9x at 0.6mm, 0.85x at 0.8mm (larger bead = more material per second)
-- Acceleration: 0.95x at 0.6mm, 0.9x at 0.8mm (larger bead = more ringing)
-- Support z-distance: scales with layer height
-- PETG 0.8mm nozzle: 1 wall + alternate extra wall (already exceeds thickness min)
-- Draft 0.2mm nozzle: 2 walls, no alternate, 2 top/bottom layers
-
-FILAMENT PROFILES
------------------
-- Generated per-printer (B PLA, B PLA A1M, etc)
-- Materials: PLA, PETG, ABS (X1C only), PVA, BVOH, PLA Silk, PLA Wood
-- A1M variants get +0.1mm retraction length
-- X1C PLA plate temps: 48°C across all plate types (enclosure traps heat)
-- A1M PLA plate temps: 57°C across all plate types (open air needs more heat)
-- ABS supertack: 90°C
-- PVA first layer: 215°C (lower than regular 220 to reduce stringing/degradation)
-- PLA Wood: max volumetric 2 mm³/s, first layer 210°C (wood particles clog at high temp)
-- PLA Silk: first layer 225°C (lower than regular 232°C to reduce globbing)
-- BVOH: 210°C, 2.5 mm³/s volumetric, compatible with both PLA and PETG unlike PVA
-
-MACHINE PROFILES
-----------------
-- Brian X1C 0.2/0.4/0.6/0.8: inherit BBL X1C + custom gcode (brian_x1c_gcode.json)
-- Brian A1M 0.2/0.4/0.6/0.8: inherit BBL A1M + custom gcode (brian_a1m_gcode.json)
-- Both gcode files are bundled as the single source of truth
-- See comment block above gcode loading functions for detailed change lists
-
-IRONING
--------
-Pre-configured for museum quality but NOT enabled by default (user enables per-project).
-Settings tuned for maximum smoothness when ironing is explicitly desired.
-
-- Flow: 20% (BBL default 10% causes patchy gaps; community range 18-39%)
-- Spacing: 0.1mm (tightest practical; nozzle covers each point ~4x for uniform smoothing)
-- Speed: 80mm/s (slower than BBL default 30mm/s would need less flow, but 80mm/s with
-  20% flow is the sweet spot; avoids corner bump artifacts that occur at 150mm/s)
-- Ref: https://forum.bambulab.com/t/ironing-help/198091
-- Ref: https://forum.bambulab.com/t/why-is-my-ironing-patchy/75896
-- Ref: https://creativestudios.com/3d-printing/3d-printing---perfect-ironing-settings
-
-ORCASLICER.CONF PATCHES
-------------------------
-- Flush multiplier: 0.85 (15% reduction, conservative, safe for all filaments)
-  BBL's auto-calculated volumes are ~57% higher than needed per community calibration.
-  0.85 is well within safe range for all filaments including silk and PVA.
-  Ref: https://forum.bambulab.com/t/ams-flushing-volumes-calibration-purge-reduction/37062
-- Printer names: "X1 Carbon" and "A1 Mini" (friendlier than serial-based defaults)
-- Known printer serials and access codes maintained for LAN mode
-
-COMMUNITY REFERENCES
---------------------
-Key values chosen based on community research and consensus:
-
-Silk PLA acceleration (1500/2500 low accel, not high):
-  https://www.sovol3d.com/blogs/news/how-many-3d-print-top-layers-for-smooth-strong-results
-  https://www.creality.com/blog/pla-print-temperature
-
-A1M PLA bed temperature (57°C, not BBL's 60-65°C default):
-  https://forum.bambulab.com/t/wth-bed-temperature-for-a1-vs-p1s/51628
-  https://github.com/bambulab/BambuStudio/issues/4883
-
-ABS supertack plate temperature (90°C, was erroneously 35°C):
-  Community consensus for ABS bed temp on supertack/high-temp plate.
-
-PVA first layer temperature (215°C, lowered from 225°C):
-  PVA degrades and strings at high temps. Lower first layer reduces issues.
-
-PLA Wood max volumetric speed (2 mm³/s) and first layer temp (210°C):
-  Wood particles restrict flow and char at high temps, causing clogs.
-  https://colorfabb.com/blog/post/how-to-print-with-woodfill-filament
-
-Shell thickness targets (1.0mm top / 0.8mm bottom):
-  https://www.sovol3d.com/blogs/news/how-many-3d-print-top-layers-for-smooth-strong-results
-  https://www.hubs.com/knowledge-base/selecting-optimal-shell-and-infill-parameters-fdm-3d-printing/
-
-PLA Fast outer wall acceleration (5000, halved from 10000):
-  Community consensus: outer wall accel matters more than speed for surface quality.
-  https://forum.bambulab.com/t/outer-wall-acceleration/192135
-
-A1M start gcode optimizations (fan reduction, z-offset):
-  https://forum.bambulab.com/t/optimized-a1-mini-start-g-code-quick-and-quiet-version/116364
-
-Filament change travel speed reduction (F18000/F15000 -> F9000):
-  Conservative approach prioritizing reliability over toolchange speed.
-
-BVOH vs PVA comparison (BVOH superior but expensive):
-  https://support.bcn3d.com/knowledge/bvoh-vs-pva
-  https://help.prusa3d.com/article/water-soluble-materials-pva-bvoh_162860
+For detailed technical documentation, profile selection guide, design
+justifications, and community references, see the TECHNICAL REFERENCE
+comment block further down in this file.
 """
 
 import json
@@ -250,6 +49,261 @@ from pathlib import Path
 # Toggle which printers to generate profiles for.
 # Set to True to enable, False to disable.
 # =============================================================================
+
+ENABLED_PRINTERS = {
+    "X1C": True,     # Bambu Lab X1 Carbon (enclosed CoreXY, hardened nozzle, lidar)
+    "X1":  False,    # Bambu Lab X1 (enclosed CoreXY, stainless nozzle, lidar)
+    "X1E": False,    # Bambu Lab X1E (enclosed CoreXY, enterprise, air filtration)
+    "P1S": False,    # Bambu Lab P1S (enclosed CoreXY, no lidar)
+    "P1P": False,    # Bambu Lab P1P (open-frame CoreXY, no enclosure)
+    "A1":  False,    # Bambu Lab A1 (i3 gantry, 256mm bed)
+    "A1M": True,     # Bambu Lab A1 Mini (i3 gantry, 180mm bed)
+}
+
+# =============================================================================
+# OPTIONAL FILAMENTS
+# Core filaments (PLA, PETG, ABS) are always generated.
+# Toggle specialty filaments you use.
+# =============================================================================
+
+OPTIONAL_FILAMENTS = {
+    "PLA Silk": True,    # Shimmer PLA - needs own process profile (low accel)
+    "PLA Wood": True,    # Wood-fill PLA - uses PLA process, low volumetric speed
+    "PLA-CF":   False,   # Carbon fiber PLA - uses PLA process, needs hardened nozzle
+    "ASA":      False,   # UV-resistant ABS alt - uses PETG/ABS process, enclosure required
+    "TPU":      False,   # Flexible - needs own process profile (very slow)
+    "PVA":      True,    # Dissolvable support interface - requires AMS
+    "BVOH":     False,   # Dissolvable support - better than PVA, works with PETG, requires AMS
+}
+
+
+# #############################################################################
+#
+#  ***** END OF USER CONFIGURATION *****
+#
+#  Everything below this line is the generator engine itself. These are the
+#  researched and tested values, scaling rules, gcode handling, and generation
+#  logic that produce the output profiles.
+#
+#  You should not need to modify anything below unless you are:
+#  - Forking this project to change the baseline print philosophy
+#  - Adding support for a new printer or filament type
+#  - Fixing a bug in the generation logic
+#
+#  If you just want to use these profiles on your printer, the only sections
+#  you need to touch are ENABLED_PRINTERS and OPTIONAL_FILAMENTS above.
+#
+# #############################################################################
+
+
+# =============================================================================
+# TECHNICAL REFERENCE
+# =============================================================================
+#
+# BASELINE PHILOSOPHY
+# -------------------
+# All profiles start from Bambu Lab's system defaults and apply a conservative
+# override strategy. The guiding principle is "if it works at 300mm/s it works
+# even better at 90mm/s." We trade speed for reliability and universal
+# compatibility across all PLA brands and irregular object geometries.
+#
+# - Slow first layer (20mm/s speed, 25mm/s infill, 75 accel) for bed adhesion
+# - Wider line widths (105% outer, 112% inner/infill) for strength and gap filling
+# - Wall print order: inner/outer/inner (sandwich mode for best dimensional accuracy)
+# - Seam on back of model (less visible than BBL's default "aligned")
+# - No brim by default (enabled per-project)
+# - Detect thin walls always on (BBL leaves this off, skipping thin features)
+# - Elephant foot compensation 0.15mm (BBL A1M default was 0, corrected)
+# - Support pre-configured but disabled (consistent settings when user enables)
+# - Support on build plate only (interior support via manual painting)
+# - Reduce crossing walls (less stringing)
+# - Gyroid infill at 10% on X1C (strongest per material, low accel to absorb shaking)
+# - Crosshatch infill at 15% on A1M (less violent direction changes for gantry arm)
+# - Ironing pre-configured for museum quality but not enabled (see IRONING section)
+# - Flush into infill enabled (redirects purge into infill to reduce waste)
+# - Shell thickness targets: top 1.0mm / bottom 0.8mm (PLA/Silk/Delicate/MM)
+#                            top 0.8mm / bottom 0.6mm (PLA Fast, PETG)
+#   Layers calculated dynamically from targets, minimum 2 layers always (except Draft)
+#
+# PRINTER VARIANTS: X1C vs A1M
+# -----------------------------
+# The A1M has a cantilevered gantry arm instead of the X1C's rigid enclosed CoreXY.
+# This fundamentally limits what the printer can handle.
+#
+# - A1M max print speed hard cap: 150mm/s (including travel)
+# - A1M max acceleration hard cap: 5000 mm/s²
+# - A1M infill: crosshatch instead of gyroid (less violent, gentler on gantry)
+# - A1M infill accel: 3000 (capped below 5000 for stability on small parts)
+# - A1M first layer: hard cap at 16/20 mm/s (speed/infill) for bed adhesion
+# - A1M Delicate mode: accel cap 1500, travel cap 60, speeds 35% slower than base
+# - A1M filament retraction: +0.1mm over X1C baseline
+# - A1M plate temps for PLA: 57°C across all plates (X1C: 48°C, enclosure traps heat)
+# - Both printers: z-offset gcode (-0.04 textured PEI, -0.02 everything else)
+# - Both printers: custom gcode bundled as JSON files (single source of truth)
+#
+# MATERIAL MODES
+# --------------
+# All modes share the universal baseline above. Each mode changes the speed/accel
+# philosophy and structural settings for different use cases.
+#
+# B PLA (default standard):
+#   - Conservative speeds: 60 outer wall, 90 inner wall, 65 infill
+#   - High outer wall accel (10000) for Bambu input shaping on visible surfaces
+#   - Works reliably across all PLA brands including cheap ones
+#   - 2 walls, top 1.0mm / bottom 0.8mm shell targets
+#
+# B PLA Fast:
+#   - Balanced speed: visually accurate (good benchy) but faster than standard
+#   - Outer wall 100mm/s (most conservative - biggest visual impact), inner 200, infill 175
+#   - Outer wall accel halved to 5000 (community consensus for reducing ringing)
+#   - Crosshatch infill on all printers (less vibration than gyroid at speed)
+#   - Thinner shells: top 0.8mm / bottom 0.6mm
+#   - Ref: https://forum.bambulab.com/t/outer-wall-acceleration/192135
+#   - Ref: https://forum.bambulab.com/t/easy-path-to-high-quality-150mm-s-print-speed/60639
+#
+# B PETG ABS:
+#   - All speeds 45mm/s - Brian's tested sweet spot for PETG
+#   - Very slow first layer: 12mm/s speed, 15mm/s infill (critical for PETG adhesion)
+#   - All acceleration capped at 2500
+#   - Alternate extra wall for PETG's weaker inter-layer bonding
+#   - Overhang speeds all 30mm/s (PETG droops more)
+#   - Thinner shells: top 0.8mm / bottom 0.6mm
+#   - 0.8mm nozzle: 1 wall + alternate (already thick enough)
+#   - Primary profile for 0.6mm nozzle functional prints on portable A1M
+#
+# B PLA Silk:
+#   - Slower speeds (~80% of PLA): 48 outer, 70 inner
+#   - LOW acceleration (1500 outer/top, 2500 inner/infill) - NOT high
+#   - Silk PLA additives make flow inconsistencies highly visible as blotchy shimmer
+#   - Low accel avoids nozzle pressure spikes that cause uneven extrusion
+#   - 3 walls for better silk surface quality
+#
+# B PLA Draft:
+#   - As fast as the printer allows: 125mm/s everything
+#   - Single wall + alternate, 1 bottom layer, max layer height for nozzle
+#   - Just need to see what the shape looks like in 3D, nothing else matters
+#   - Tree support for easy removal, cubic infill at 7%
+#   - 0.2mm nozzle exception: 2 walls, no alternate, 2 top/bottom layers
+#
+# B PLA Delicate:
+#   - Ultra-conservative for small intricate parts (D&D minis, etc)
+#   - All speeds 45mm/s, all acceleration 500 mm/s²
+#   - Low accel prevents jolting that knocks over tiny fragile features
+#   - 3 walls, cubic infill 15%, interlocking beam enabled
+#   - X1C: 20% speed reduction on top of base (speeds become ~36mm/s)
+#   - A1M: 35% speed reduction on top of base (speeds become ~29mm/s)
+#     - A1M Delicate accel cap: 1500 (tighter than general 5000)
+#     - A1M Delicate travel cap: 60mm/s
+#
+# B PLA MM (Multi-Material):
+#   - Slower than PLA standard (75/55/60 inner/infill/outer) with 2500 accel cap
+#   - Intentionally conservative: colors bleeding, materials not sticking, prime tower
+#     issues all improve with slower speeds
+#   - Flush into infill (saves material) but NOT into support (needs clean surfaces)
+#   - Cubic infill 15% (less wall deformation than gyroid, pattern doesn't align with walls)
+#   - Dynamic wall count: minimum 1.0mm wall thickness target (3 walls on 0.4mm,
+#     2 walls on 0.6/0.8mm nozzle where 2 walls already exceeds 1mm)
+#
+# B PLA+PETG+PVA MM:
+#   - Most conservative profile: PLA and PETG don't naturally adhere
+#   - 0.18mm layer height for more inter-material bonding surface area
+#   - Zero support z-distance so PVA prints directly against model surface
+#   - Concentric support interface with zero spacing (solid PVA interface layer)
+#   - Very slow speeds (40-55mm/s) for precise multi-material deposition
+#   - Same 1.0mm minimum wall thickness target and cubic infill as PLA MM
+#
+# NOZZLE SCALING
+# --------------
+# - Layer height: 50% of nozzle diameter (draft: ~60%, PVA MM: ~45%)
+# - Wall loops: +2 on 0.2mm nozzle to maintain minimum wall thickness
+#   (or dynamically calculated from min_wall_thickness target for MM profiles)
+# - Speed: 0.9x at 0.6mm, 0.85x at 0.8mm (larger bead = more material per second)
+# - Acceleration: 0.95x at 0.6mm, 0.9x at 0.8mm (larger bead = more ringing)
+# - Support z-distance: scales with layer height
+# - PETG 0.8mm nozzle: 1 wall + alternate extra wall (already exceeds thickness min)
+# - Draft 0.2mm nozzle: 2 walls, no alternate, 2 top/bottom layers
+#
+# FILAMENT PROFILES
+# -----------------
+# - Generated per-printer (B PLA, B PLA A1M, etc)
+# - Materials: PLA, PETG, ABS (X1C only), PVA, BVOH, PLA Silk, PLA Wood
+# - A1M variants get +0.1mm retraction length
+# - X1C PLA plate temps: 48°C across all plate types (enclosure traps heat)
+# - A1M PLA plate temps: 57°C across all plate types (open air needs more heat)
+# - ABS supertack: 90°C
+# - PVA first layer: 215°C (lower than regular 220 to reduce stringing/degradation)
+# - PLA Wood: max volumetric 2 mm³/s, first layer 210°C (wood particles clog at high temp)
+# - PLA Silk: first layer 225°C (lower than regular 232°C to reduce globbing)
+# - BVOH: 210°C, 2.5 mm³/s volumetric, compatible with both PLA and PETG unlike PVA
+#
+# MACHINE PROFILES
+# ----------------
+# - Brian X1C 0.2/0.4/0.6/0.8: inherit BBL X1C + custom gcode (brian_x1c_gcode.json)
+# - Brian A1M 0.2/0.4/0.6/0.8: inherit BBL A1M + custom gcode (brian_a1m_gcode.json)
+# - Both gcode files are bundled as the single source of truth
+# - See comment block above gcode loading functions for detailed change lists
+#
+# IRONING
+# -------
+# Pre-configured for museum quality but NOT enabled by default (user enables per-project).
+# Settings tuned for maximum smoothness when ironing is explicitly desired.
+#
+# - Flow: 20% (BBL default 10% causes patchy gaps; community range 18-39%)
+# - Spacing: 0.1mm (tightest practical; nozzle covers each point ~4x for uniform smoothing)
+# - Speed: 80mm/s (slower than BBL default 30mm/s would need less flow, but 80mm/s with
+#   20% flow is the sweet spot; avoids corner bump artifacts that occur at 150mm/s)
+# - Ref: https://forum.bambulab.com/t/ironing-help/198091
+# - Ref: https://forum.bambulab.com/t/why-is-my-ironing-patchy/75896
+# - Ref: https://creativestudios.com/3d-printing/3d-printing---perfect-ironing-settings
+#
+# ORCASLICER.CONF PATCHES
+# ------------------------
+# - Flush multiplier: 0.85 (15% reduction, conservative, safe for all filaments)
+#   BBL's auto-calculated volumes are ~57% higher than needed per community calibration.
+#   0.85 is well within safe range for all filaments including silk and PVA.
+#   Ref: https://forum.bambulab.com/t/ams-flushing-volumes-calibration-purge-reduction/37062
+# - Printer names: "X1 Carbon" and "A1 Mini" (friendlier than serial-based defaults)
+# - Known printer serials and access codes maintained for LAN mode
+#
+# COMMUNITY REFERENCES
+# --------------------
+# Key values chosen based on community research and consensus:
+#
+# Silk PLA acceleration (1500/2500 low accel, not high):
+#   https://www.sovol3d.com/blogs/news/how-many-3d-print-top-layers-for-smooth-strong-results
+#   https://www.creality.com/blog/pla-print-temperature
+#
+# A1M PLA bed temperature (57°C, not BBL's 60-65°C default):
+#   https://forum.bambulab.com/t/wth-bed-temperature-for-a1-vs-p1s/51628
+#   https://github.com/bambulab/BambuStudio/issues/4883
+#
+# ABS supertack plate temperature (90°C, was erroneously 35°C):
+#   Community consensus for ABS bed temp on supertack/high-temp plate.
+#
+# PVA first layer temperature (215°C, lowered from 225°C):
+#   PVA degrades and strings at high temps. Lower first layer reduces issues.
+#
+# PLA Wood max volumetric speed (2 mm³/s) and first layer temp (210°C):
+#   Wood particles restrict flow and char at high temps, causing clogs.
+#   https://colorfabb.com/blog/post/how-to-print-with-woodfill-filament
+#
+# Shell thickness targets (1.0mm top / 0.8mm bottom):
+#   https://www.sovol3d.com/blogs/news/how-many-3d-print-top-layers-for-smooth-strong-results
+#   https://www.hubs.com/knowledge-base/selecting-optimal-shell-and-infill-parameters-fdm-3d-printing/
+#
+# PLA Fast outer wall acceleration (5000, halved from 10000):
+#   Community consensus: outer wall accel matters more than speed for surface quality.
+#   https://forum.bambulab.com/t/outer-wall-acceleration/192135
+#
+# A1M start gcode optimizations (fan reduction, z-offset):
+#   https://forum.bambulab.com/t/optimized-a1-mini-start-g-code-quick-and-quiet-version/116364
+#
+# Filament change travel speed reduction (F18000/F15000 -> F9000):
+#   Conservative approach prioritizing reliability over toolchange speed.
+#
+# BVOH vs PVA comparison (BVOH superior but expensive):
+#   https://support.bcn3d.com/knowledge/bvoh-vs-pva
+#   https://help.prusa3d.com/article/water-soluble-materials-pva-bvoh_162860
 
 # =============================================================================
 # PROFILE GUIDE: CHOOSING THE RIGHT PROFILE
@@ -378,61 +432,6 @@ from pathlib import Path
 #   adjust the Z-offset in the machine gcode (-0.02 for most plates,
 #   -0.04 for textured PEI) rather than changing this value.
 # =============================================================================
-
-ENABLED_PRINTERS = {
-    "X1C": True,     # Bambu Lab X1 Carbon (enclosed CoreXY, hardened nozzle, lidar)
-    "X1":  False,    # Bambu Lab X1 (enclosed CoreXY, stainless nozzle, lidar)
-    "X1E": False,    # Bambu Lab X1E (enclosed CoreXY, enterprise, air filtration)
-    "P1S": False,    # Bambu Lab P1S (enclosed CoreXY, no lidar)
-    "P1P": False,    # Bambu Lab P1P (open-frame CoreXY, no enclosure)
-    "A1":  False,    # Bambu Lab A1 (i3 gantry, 256mm bed)
-    "A1M": True,     # Bambu Lab A1 Mini (i3 gantry, 180mm bed)
-}
-
-# =============================================================================
-# USER-MODIFIABLE: OPTIONAL FILAMENTS & PROFILES
-# Core filaments (PLA, PETG, ABS, PVA) are always generated.
-# Toggle optional specialty filaments and their associated process profiles.
-#
-# NOTE: PLA-CF, ASA, and TPU profiles are based on community consensus and
-# conservative optimizations but have NOT been personally tested by the author.
-# Please provide feedback if you use these and discover any issues.
-#
-# Enclosure requirements:
-#   ASA requires an enclosure (X1C/P1S only, will not generate for A1/A1M)
-#   PLA-CF and TPU do not require an enclosure
-#   *** PETG REQUIRES the enclosure lid to be REMOVED on X1C/P1S ***
-#   *** Printing PETG with the lid closed WILL cause heat creep and clogging ***
-# =============================================================================
-
-OPTIONAL_FILAMENTS = {
-    "PLA Silk": True,    # Shimmer PLA - needs own process profile (low accel)
-    "PLA Wood": True,    # Wood-fill PLA - uses PLA process, low volumetric speed
-    "PLA-CF":   False,   # Carbon fiber PLA - uses PLA process, needs hardened nozzle
-    "ASA":      False,   # UV-resistant ABS alt - uses PETG/ABS process, enclosure required
-    "TPU":      False,   # Flexible - needs own process profile (very slow)
-    "PVA":      True,    # Dissolvable support interface - requires AMS
-    "BVOH":     False,   # Dissolvable support - better than PVA, works with PETG, requires AMS
-}
-
-
-# #############################################################################
-#
-#  ***** END OF USER CONFIGURATION *****
-#
-#  Everything below this line is the generator engine itself. These are the
-#  researched and tested values, scaling rules, gcode handling, and generation
-#  logic that produce the output profiles.
-#
-#  You should not need to modify anything below unless you are:
-#  - Forking this project to change the baseline print philosophy
-#  - Adding support for a new printer or filament type
-#  - Fixing a bug in the generation logic
-#
-#  If you just want to use these profiles on your printer, the only sections
-#  you need to touch are ENABLED_PRINTERS and OPTIONAL_FILAMENTS above.
-#
-# #############################################################################
 
 
 # =============================================================================
@@ -2598,3 +2597,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
