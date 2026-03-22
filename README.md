@@ -43,23 +43,24 @@ Each printer supports 0.2mm, 0.4mm, 0.6mm, and 0.8mm nozzle sizes.
 | **PLA Delicate** | Ultra-conservative for miniatures and tiny features. Very low acceleration. |
 | **PLA MM** | Multi-material color prints. Slower for reliable color changes. |
 | **PLA+PETG+PVA MM** | Multi-material with dissolvable support. Most conservative profile. |
-| **TPU** | Flexible filament. Very slow, minimal retraction. *(optional, community-tested)* |
+| **TPU** | Flexible filament. Very slow, minimal retraction. |
 
-## Optional Filaments
+## Filaments
 
-Core filaments (PLA, PETG, ABS) are always generated. Specialty filaments can be toggled:
+| Filament | Optional | Notes |
+|----------|----------|-------|
+| PLA | No | Standard PLA, works with all brands |
+| PETG | No | Functional parts, slow and careful |
+| ABS | No | Enclosure required |
+| PLA Silk | Yes | Shimmer PLA with own process profile |
+| PLA Wood | Yes | Wood-fill, low volumetric speed to prevent clogs |
+| PVA | Yes | Dissolvable support interface, requires AMS |
+| PLA-CF | Yes | Carbon fiber PLA, requires hardened nozzle |
+| ASA | Yes | UV-resistant ABS alternative, enclosure required |
+| TPU | Yes | Flexible, requires own process profile |
+| BVOH | Yes | Better dissolvable support, works with PETG unlike PVA |
 
-| Filament | Default | Notes |
-|----------|---------|-------|
-| PLA Silk | Enabled | Shimmer PLA with own process profile |
-| PLA Wood | Enabled | Wood-fill, low volumetric speed to prevent clogs |
-| PLA-CF | Disabled | Carbon fiber PLA, requires hardened nozzle *(community-tested)* |
-| ASA | Disabled | UV-resistant ABS alternative, enclosure required *(community-tested)* |
-| TPU | Disabled | Flexible, requires own process profile *(community-tested)* |
-| PVA | Enabled | Dissolvable support interface, requires AMS |
-| BVOH | Disabled | Better dissolvable support, works with PETG unlike PVA |
-
-Profiles marked *(community-tested)* are based on community consensus and conservative optimizations but have not been personally validated by the author. Feedback welcome via issues.
+**Tested filaments:** PLA, PETG, ABS, PVA, PLA Silk, and PLA Wood have all been personally tested and validated by the author. PLA-CF, ASA, TPU, and BVOH are configured based on research into community consensus and conservative optimizations - feedback welcome via issues if you use these.
 
 ## Philosophy
 
