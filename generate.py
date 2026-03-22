@@ -416,8 +416,11 @@ ORCA_PROFILE_VERSION = "1.10.0.35"
 # =============================================================================
 
 ENABLED_PRINTERS = {
-    "X1C": True,     # Bambu Lab X1 Carbon (enclosed CoreXY)
+    "X1C": True,     # Bambu Lab X1 Carbon (enclosed CoreXY, hardened nozzle, lidar)
+    "X1":  False,    # Bambu Lab X1 (enclosed CoreXY, stainless nozzle, lidar)
+    "X1E": False,    # Bambu Lab X1E (enclosed CoreXY, enterprise, air filtration)
     "P1S": False,    # Bambu Lab P1S (enclosed CoreXY, no lidar)
+    "P1P": False,    # Bambu Lab P1P (open-frame CoreXY, no enclosure)
     "A1":  False,    # Bambu Lab A1 (i3 gantry, 256mm bed)
     "A1M": True,     # Bambu Lab A1 Mini (i3 gantry, 180mm bed)
 }
@@ -444,7 +447,7 @@ OPTIONAL_FILAMENTS = {
     "PLA-CF":   False,   # Carbon fiber PLA - uses PLA process, needs hardened nozzle
     "ASA":      False,   # UV-resistant ABS alt - uses PETG/ABS process, enclosure required
     "TPU":      False,   # Flexible - needs own process profile (very slow)
-    "BVOH":     True,    # Dissolvable support - better than PVA, works with PETG
+    "BVOH":     False,   # Dissolvable support - better than PVA, works with PETG
 }
 
 # =============================================================================
@@ -452,19 +455,36 @@ OPTIONAL_FILAMENTS = {
 # =============================================================================
 
 # Printer group: determines which settings philosophy to use.
-# "corexy" = enclosed CoreXY (X1C, P1S) - uses X1C speed/accel/infill settings
-# "i3"     = cantilevered gantry (A1, A1M) - uses A1M caps and crosshatch infill
+# "corexy" = CoreXY frame (X1C, X1, X1E, P1S, P1P) - uses corexy speed/accel/infill
+# "i3"     = cantilevered gantry (A1, A1M) - uses i3 caps and crosshatch infill
 PRINTER_GROUP = {
     "X1C": "corexy",
+    "X1":  "corexy",
+    "X1E": "corexy",
     "P1S": "corexy",
+    "P1P": "corexy",
     "A1":  "i3",
     "A1M": "i3",
+}
+
+# Whether the printer has an enclosure (affects ABS/ASA availability)
+PRINTER_ENCLOSED = {
+    "X1C": True,
+    "X1":  True,
+    "X1E": True,
+    "P1S": True,
+    "P1P": False,   # Open frame - no enclosure
+    "A1":  False,
+    "A1M": False,
 }
 
 # Profile name suffix per printer (X1C is default, no suffix)
 PRINTER_SUFFIX = {
     "X1C": "",
+    "X1":  " X1",
+    "X1E": " X1E",
     "P1S": " P1S",
+    "P1P": " P1P",
     "A1":  " A1",
     "A1M": " A1M",
 }
@@ -474,7 +494,10 @@ PRINTER_SUFFIX = {
 # so compatible_printers is always specific to that printer.
 FILAMENT_PRINTER_SUFFIX = {
     "X1C": " X1C",
+    "X1":  " X1",
+    "X1E": " X1E",
     "P1S": " P1S",
+    "P1P": " P1P",
     "A1":  " A1",
     "A1M": " A1M",
 }
@@ -505,6 +528,53 @@ ALL_PRINTERS = {
         },
         "gcode_file": "brian_x1c_gcode.json",
     },
+    "X1": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @BBL X1C 0.2 nozzle", "GP007"),  # X1 uses X1C process profiles
+            0.4: ("0.20mm Standard @BBL X1C", "GP004"),
+            0.6: ("0.30mm Standard @BBL X1C 0.6 nozzle", "GP010"),
+            0.8: ("0.40mm Standard @BBL X1C 0.8 nozzle", "GP009"),
+        },
+        "machine_profile_names": {
+            0.2: "Brian X1 0.2",
+            0.4: "Brian X1 0.4",
+            0.6: "Brian X1 0.6",
+            0.8: "Brian X1 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Bambu Lab X1 0.2 nozzle", "GM008"),
+            0.4: ("Bambu Lab X1 0.4 nozzle", "GM003"),
+            0.6: ("Bambu Lab X1 0.6 nozzle", "GM006"),
+            0.8: ("Bambu Lab X1 0.8 nozzle", "GM007"),
+        },
+        "machine_extras": {
+            "printable_area": ["0x0", "256x0", "256x248", "0x248"],
+            "thumbnails": "48x48/PNG, 300x300/PNG",
+        },
+        "gcode_file": "brian_x1_gcode.json",  # identical to X1C gcode
+    },
+    "X1E": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @BBL X1C 0.2 nozzle", "GP007"),  # X1E uses X1C process profiles
+            0.4: ("0.20mm Standard @BBL X1C", "GP004"),
+            0.6: ("0.30mm Standard @BBL X1C 0.6 nozzle", "GP010"),
+            0.8: ("0.40mm Standard @BBL X1C 0.8 nozzle", "GP009"),
+        },
+        "machine_profile_names": {
+            0.2: "Brian X1E 0.2",
+            0.4: "Brian X1E 0.4",
+            0.6: "Brian X1E 0.6",
+            0.8: "Brian X1E 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Bambu Lab X1E 0.2 nozzle", "GM025"),
+            0.4: ("Bambu Lab X1E 0.4 nozzle", "GM026"),
+            0.6: ("Bambu Lab X1E 0.6 nozzle", "GM027"),
+            0.8: ("Bambu Lab X1E 0.8 nozzle", "GM028"),
+        },
+        "machine_extras": {},
+        "gcode_file": "brian_x1e_gcode.json",
+    },
     "P1S": {
         "nozzle_base_profiles": {
             0.2: ("0.10mm Standard @BBL X1C 0.2 nozzle", "GP007"),  # P1S uses X1C process profiles
@@ -526,6 +596,28 @@ ALL_PRINTERS = {
         },
         "machine_extras": {},
         "gcode_file": "brian_p1s_gcode.json",
+    },
+    "P1P": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @BBL X1C 0.2 nozzle", "GP007"),  # P1P uses X1C process profiles
+            0.4: ("0.20mm Standard @BBL X1C", "GP004"),
+            0.6: ("0.30mm Standard @BBL X1C 0.6 nozzle", "GP010"),
+            0.8: ("0.40mm Standard @BBL X1C 0.8 nozzle", "GP009"),
+        },
+        "machine_profile_names": {
+            0.2: "Brian P1P 0.2",
+            0.4: "Brian P1P 0.4",
+            0.6: "Brian P1P 0.6",
+            0.8: "Brian P1P 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Bambu Lab P1P 0.2 nozzle", "GM010"),
+            0.4: ("Bambu Lab P1P 0.4 nozzle", "GM013"),
+            0.6: ("Bambu Lab P1P 0.6 nozzle", "GM011"),
+            0.8: ("Bambu Lab P1P 0.8 nozzle", "GM012"),
+        },
+        "machine_extras": {},
+        "gcode_file": "brian_p1p_gcode.json",
     },
     "A1": {
         "nozzle_base_profiles": {
@@ -1543,7 +1635,7 @@ FILAMENT_B_TPU = {
 _CORE_FILAMENTS = {
     "B PLA":      (FILAMENT_B_PLA, None, None),
     "B PETG":     (FILAMENT_B_PETG, None, None),
-    "B ABS":      (FILAMENT_B_ABS, None, ["X1C", "P1S"]),  # enclosure required
+    "B ABS":      (FILAMENT_B_ABS, None, [k for k, v in PRINTER_ENCLOSED.items() if v]),
     "B PVA":      (FILAMENT_B_PVA, None, None),
 }
 
@@ -1552,7 +1644,7 @@ _OPTIONAL_FILAMENTS = {
     "B PLA Silk": (FILAMENT_B_PLA_SILK_OVERRIDES, "B PLA", None, "PLA Silk"),
     "B PLA Wood": (FILAMENT_B_PLA_WOOD_OVERRIDES, "B PLA", None, "PLA Wood"),
     "B PLA-CF":   (FILAMENT_B_PLA_CF_OVERRIDES, "B PLA", None, "PLA-CF"),
-    "B ASA":      (FILAMENT_B_ASA, None, ["X1C", "P1S"], "ASA"),  # enclosure required
+    "B ASA":      (FILAMENT_B_ASA, None, [k for k, v in PRINTER_ENCLOSED.items() if v], "ASA"),
     "B TPU":      (FILAMENT_B_TPU, None, None, "TPU"),
     "B BVOH":     (FILAMENT_B_BVOH, None, None, "BVOH"),
 }
@@ -2072,19 +2164,15 @@ def generate_filament_profiles(dry_run: bool = False):
                 "textured_plate_temp", "textured_plate_temp_initial_layer",
             ]
 
-            # CoreXY (enclosed): PLA-based filaments use 48°C across all plates
-            if group == "corexy":
-                fil_type = profile.get("filament_type", [""])[0]
-                if fil_type in ("PLA", "PVA"):
-                    for plate_key in ALL_PLATE_KEYS:
-                        profile[plate_key] = ["48"]
-
-            # i3 (open air): PLA-based filaments use 57°C across all plates
-            if group == "i3":
-                fil_type = profile.get("filament_type", [""])[0]
-                if fil_type in ("PLA", "PVA"):
-                    for plate_key in ALL_PLATE_KEYS:
-                        profile[plate_key] = ["57"]
+            # Plate temps for PLA-based filaments depend on enclosure
+            # Enclosed printers: 48°C (enclosure traps heat)
+            # Open-air printers: 57°C (needs more heat to compensate)
+            fil_type = profile.get("filament_type", [""])[0]
+            if fil_type in ("PLA", "PVA"):
+                is_enclosed = PRINTER_ENCLOSED.get(printer_key, False)
+                plate_temp = "48" if is_enclosed else "57"
+                for plate_key in ALL_PLATE_KEYS:
+                    profile[plate_key] = [plate_temp]
 
             if dry_run:
                 zhop = profile.get("filament_z_hop", ["?"])[0]
