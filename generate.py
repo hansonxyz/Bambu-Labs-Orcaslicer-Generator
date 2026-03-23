@@ -806,7 +806,7 @@ PRINTER_DELTAS = {
         # 3000 accel: crosshatch is gentler so can go higher than corexy's 2000,
         # but still capped well below 6000 default for gantry stability on small parts.
         "sparse_infill_pattern": "crosshatch",
-        "sparse_infill_density": "15%",
+        "sparse_infill_density": "14%",
         "sparse_infill_acceleration": "3000",
         "travel_acceleration": "2500",
     },
