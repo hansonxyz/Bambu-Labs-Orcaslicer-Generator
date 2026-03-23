@@ -910,8 +910,8 @@ PETG_ABS = {
     # Shells
     "top_shell_thickness": "0.8",
     "bottom_shell_thickness": "0.6",
-    # Infill
-    "sparse_infill_density": "11%",
+    # Infill - density set per printer group in build_profile:
+    # corexy (gyroid): 14%, i3 (crosshatch): 18%
     "support_threshold_angle": "35",
 }
 
@@ -1990,6 +1990,11 @@ def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
     profile.update(deepcopy(UNIVERSAL_OVERRIDES))
     profile.update(deepcopy(PRINTER_DELTAS[group]))
     profile.update(deepcopy(MATERIAL_MODES[mode_name]))
+
+    # PETG/ABS/ASA: higher infill density than PLA for structural strength
+    # corexy gyroid 14%, i3 crosshatch 18% (crosshatch is weaker, compensate)
+    if mode_name == "PETG ABS":
+        profile["sparse_infill_density"] = "14%" if group == "corexy" else "18%"
 
     if group == "i3":
         _raise_infill_to_max_speed(profile)
