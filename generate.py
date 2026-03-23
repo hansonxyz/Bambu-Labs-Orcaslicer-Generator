@@ -821,7 +821,7 @@ PRINTER_DELTAS = {
 # Conservative baseline. ~30-45% of BBL speeds.
 # Works reliably across all PLA brands and object geometries.
 PLA_STANDARD = {
-    "outer_wall_speed": "60",
+    "outer_wall_speed": "90",
     "inner_wall_speed": "90",
     "sparse_infill_speed": "65",
     "internal_solid_infill_speed": "90",
@@ -840,19 +840,18 @@ PLA_STANDARD = {
 }
 
 # --- PLA Fast ---
-# Near-stock speeds with targeted conservative reductions where it matters.
-# Outer wall is the main quality lever - kept at 75% of stock.
-# Inner wall and solid infill match stock (hidden, no visual impact).
+# ~85% of BBL stock speeds. Outer wall and top surface get the most
+# conservative treatment since they're visible. Everything else near stock.
 # Uses crosshatch infill on all printers to reduce vibration at speed.
 PLA_FAST = {
-    "outer_wall_speed": "150",       # 75% of BBL 200 - biggest visual impact
-    "inner_wall_speed": "300",       # match stock - hidden, no visual impact
-    "sparse_infill_speed": "200",    # 74% of BBL 270 - reduced for vibration
-    "internal_solid_infill_speed": "250",  # match stock
+    "outer_wall_speed": "170",       # 85% of BBL 200 - visible, main quality lever
+    "inner_wall_speed": "250",       # 83% of BBL 300 - hidden
+    "sparse_infill_speed": "225",    # 83% of BBL 270
+    "internal_solid_infill_speed": "225",  # 90% of BBL 250
     "gap_infill_speed": "200",       # 80% of BBL 250
-    "top_surface_speed": "175",      # 88% of BBL 200 - visible, slight reduction
+    "top_surface_speed": "170",      # 85% of BBL 200 - visible
     "support_speed": "150",          # match stock
-    "travel_speed": "350",           # 70% of BBL 500 - conservative travel
+    "travel_speed": "400",           # 80% of BBL 500
     # Acceleration - match or stay below stock, never exceed
     "outer_wall_acceleration": "5000",   # match stock
     "top_surface_acceleration": "2000",  # match stock
@@ -943,24 +942,24 @@ PLA_SILK = {
 }
 
 # --- PLA Draft ---
-# As fast as the printer is designed for. Visualize shape quickly.
+# ~90% of BBL stock. Visualize shape quickly.
 # Structural integrity and surface quality don't matter.
 # Single wall, minimal shells, max layer height for nozzle.
 PLA_DRAFT = {
-    "outer_wall_speed": "125",
-    "inner_wall_speed": "125",
-    "sparse_infill_speed": "125",
-    "internal_solid_infill_speed": "125",
-    "gap_infill_speed": "125",
-    "top_surface_speed": "125",
-    "support_speed": "100",
+    "outer_wall_speed": "180",       # 90% of BBL 200
+    "inner_wall_speed": "250",       # 83% of BBL 300
+    "sparse_infill_speed": "250",    # 93% of BBL 270
+    "internal_solid_infill_speed": "225",  # 90% of BBL 250
+    "gap_infill_speed": "225",       # 90% of BBL 250
+    "top_surface_speed": "180",      # 90% of BBL 200
+    "support_speed": "135",          # 90% of BBL 150
     "support_interface_speed": "75",
-    "travel_speed": "175",
-    # Acceleration - fast but not insane
-    "default_acceleration": "5000",
-    "inner_wall_acceleration": "5000",
-    "top_surface_acceleration": "3500",
-    "travel_acceleration": "2500",
+    "travel_speed": "450",           # 90% of BBL 500
+    # Acceleration - push it for draft speed
+    "default_acceleration": "7500",
+    "inner_wall_acceleration": "7500",
+    "top_surface_acceleration": "5000",
+    "travel_acceleration": "5000",
     # Layer - tallest recommended for nozzle (scaled in nozzle layer)
     "layer_height": "0.24",
     # Minimal structure
@@ -1951,6 +1950,16 @@ I3_CAPS = {
             "initial_layer_speed": 16,
             "initial_layer_infill_speed": 20,
         },
+    },
+    "PLA Fast": {
+        "max_accel": 7500,
+        "max_speed": 225,
+        "travel_cap": 225,
+    },
+    "PLA Draft": {
+        "max_accel": 7500,
+        "max_speed": 225,
+        "travel_cap": 225,
     },
     "PLA Delicate": {
         "max_accel": 1500,
