@@ -808,7 +808,7 @@ PRINTER_DELTAS = {
         "sparse_infill_pattern": "crosshatch",
         "sparse_infill_density": "15%",
         "sparse_infill_acceleration": "3000",
-        "travel_acceleration": "4500",
+        "travel_acceleration": "2500",
     },
 }
 
