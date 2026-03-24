@@ -109,6 +109,24 @@ if _CONFIG_FILE.exists():
 
 
 # =============================================================================
+# PER-PROJECT SETTINGS
+# =============================================================================
+# These generated profiles handle the vast majority of settings automatically,
+# but some decisions depend on the specific model you're printing. Review these
+# before slicing and adjust in OrcaSlicer as needed.
+#
+# Seam position (default: back)
+#   The Z-seam is placed on the back of the model by default, which works well
+#   for models displayed facing forward. For cylindrical or round models where
+#   "back" creates an obvious vertical line, switch to "aligned" (follows sharp
+#   edges) or "random" (distributes seam blobs across the surface). For models
+#   viewed from all angles, "random" hides the seam best but leaves tiny blobs
+#   on every layer.
+#
+# =============================================================================
+
+
+# =============================================================================
 # TECHNICAL REFERENCE
 # =============================================================================
 #
