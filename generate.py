@@ -772,6 +772,18 @@ UNIVERSAL_OVERRIDES = {
     "ensure_vertical_shell_thickness": "ensure_moderate",
     "wall_infill_order": "inner wall/outer wall/inner wall",
     "seam_position": "back",
+    # Scarf joint: gradually ramps extrusion at seam for near-invisible seams on curves.
+    # Conditional mode only applies on smooth curves, leaves sharp corners alone.
+    "seam_slope_type": "external",
+    "seam_slope_conditional": "1",
+    "scarf_angle_threshold": "155",
+    "seam_slope_entire_loop": "0",
+    "seam_slope_min_length": "20",
+    "seam_slope_steps": "10",
+    "seam_slope_inner_walls": "0",
+    # Staggered inner seams: offsets inner wall seams from outer wall seam across
+    # layers. Distributes weak points, improves strength and water-tightness.
+    "staggered_inner_seams": "1",
     "brim_type": "no_brim",
     "bottom_shell_layers": "2",
     "top_shell_layers": "4",
