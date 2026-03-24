@@ -769,6 +769,7 @@ UNIVERSAL_OVERRIDES = {
     "elefant_foot_compensation": "0.15",
     "detect_thin_wall": "1",
     "reduce_crossing_wall": "1",
+    "wall_generator": "arachne",  # variable width walls, better thin features, less gap fill
     "ensure_vertical_shell_thickness": "ensure_moderate",
     "wall_infill_order": "inner wall/outer wall/inner wall",
     "seam_position": "back",
@@ -992,6 +993,7 @@ PLA_DRAFT = {
     # Minimal structure
     "wall_loops": "1",
     "alternate_extra_wall": "1",
+    "wall_generator": "classic",  # simpler/faster for draft, precision doesn't matter
     "bottom_shell_layers": "1",
     "bottom_shell_thickness": "0.2",
     "top_shell_layers": "2",
