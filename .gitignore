@@ -3,3 +3,4 @@ backups/
 *.gcode
 CLAUDE.md
 config.json
+reference/
