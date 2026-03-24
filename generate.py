@@ -751,6 +751,7 @@ UNIVERSAL_OVERRIDES = {
     "elefant_foot_compensation": "0.15",
     "detect_thin_wall": "1",
     "reduce_crossing_wall": "1",
+    "ensure_vertical_shell_thickness": "ensure_moderate",
     "wall_infill_order": "inner wall/outer wall/inner wall",
     "seam_position": "back",
     "brim_type": "no_brim",
@@ -836,7 +837,6 @@ PLA_STANDARD = {
     "layer_height": "0.20",
     # Walls
     "wall_loops": "2",
-    "ensure_vertical_shell_thickness": "ensure_moderate",
 }
 
 # --- PLA Fast ---
@@ -868,7 +868,6 @@ PLA_FAST = {
     "bottom_shell_thickness": "0.6",
     # Walls
     "wall_loops": "2",
-    "ensure_vertical_shell_thickness": "ensure_moderate",
 }
 
 # --- PETG/ABS ---
@@ -900,7 +899,6 @@ PETG_ABS = {
     # Walls - alternate extra wall for PETG bonding strength
     "wall_loops": "2",
     "alternate_extra_wall": "1",
-    "ensure_vertical_shell_thickness": "ensure_moderate",
     # Overhangs - PETG droops more
     "overhang_1_4_speed": "30",
     "overhang_2_4_speed": "30",
@@ -938,7 +936,6 @@ PLA_SILK = {
     "layer_height": "0.20",
     # Extra wall for silk surface quality
     "wall_loops": "3",
-    "ensure_vertical_shell_thickness": "ensure_moderate",
 }
 
 # --- PLA Draft ---
@@ -1136,7 +1133,6 @@ TPU = {
     "bottom_shell_thickness": "0.8",
     # Walls
     "wall_loops": "2",
-    "ensure_vertical_shell_thickness": "ensure_moderate",
     # TPU is flexible so gyroid/crosshatch doesn't matter for vibration,
     # but grid gives the most predictable flex behavior
     "sparse_infill_pattern": "grid",
