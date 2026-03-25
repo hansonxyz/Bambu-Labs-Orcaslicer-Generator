@@ -786,8 +786,11 @@ UNIVERSAL_OVERRIDES = {
     # layers. Distributes weak points, improves strength and water-tightness.
     "staggered_inner_seams": "1",
     "brim_type": "no_brim",
+    # Shell layers: fixed count minimums. Thickness targets below ensure
+    # OrcaSlicer adds more layers on small nozzles to meet mm targets.
+    "top_shell_layers": "3",
     "bottom_shell_layers": "2",
-    "top_shell_layers": "4",
+    "wall_loops": "2",
     "top_shell_thickness": "1.0",
     "bottom_shell_thickness": "0.8",
 
@@ -866,8 +869,6 @@ PLA_STANDARD = {
     "internal_solid_infill_acceleration": "5000",
     # Layer
     "layer_height": "0.20",
-    # Walls
-    "wall_loops": "2",
 }
 
 # --- PLA Fast ---
@@ -897,8 +898,6 @@ PLA_FAST = {
     # Shells - thinner than standard, faster print
     "top_shell_thickness": "0.8",
     "bottom_shell_thickness": "0.6",
-    # Walls
-    "wall_loops": "2",
 }
 
 # --- PETG/ABS ---
@@ -928,7 +927,6 @@ PETG_ABS = {
     # Layer
     "layer_height": "0.20",
     # Walls - alternate extra wall for PETG bonding strength
-    "wall_loops": "2",
     "alternate_extra_wall": "1",
     # Overhangs - PETG droops more
     "overhang_1_4_speed": "30",
@@ -1160,11 +1158,6 @@ TPU = {
     "initial_layer_infill_speed": "20",
     # Layer
     "layer_height": "0.20",
-    # Shells - standard thickness
-    "top_shell_thickness": "1.0",
-    "bottom_shell_thickness": "0.8",
-    # Walls
-    "wall_loops": "2",
     # TPU is flexible so gyroid/crosshatch doesn't matter for vibration,
     # but grid gives the most predictable flex behavior
     "sparse_infill_pattern": "grid",
@@ -2076,28 +2069,23 @@ def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
         profile["support_top_z_distance"] = f"{lh:.2f}"
         profile["support_bottom_z_distance"] = f"{lh:.2f}"
 
-    # --- Step 5: Shell layer calculation ---
-    # Rule: ceil(target / layer_height), min 2 layers (Draft exempt)
-    min_shell = 1 if mode_name == "PLA Draft" else 2
-    if "top_shell_thickness" in profile:
-        profile["top_shell_layers"] = str(
-            _calc_shell_layers(float(profile["top_shell_thickness"]), lh, min_shell))
-    if "bottom_shell_thickness" in profile:
-        profile["bottom_shell_layers"] = str(
-            _calc_shell_layers(float(profile["bottom_shell_thickness"]), lh, min_shell))
+    # Shell layers: OrcaSlicer natively uses whichever is larger -
+    # the layer count or the count needed to meet the thickness target.
+    # Both are set in the profile so no calculation needed here.
 
-    # --- Step 6: Mode+nozzle specific overrides ---
+    # --- Step 5: Mode+nozzle specific overrides ---
+
     overrides = MODE_NOZZLE_OVERRIDES.get((mode_name, nozzle))
     if overrides:
         profile.update(overrides)
 
-    # --- Step 7: Per-printer-group speed reductions ---
+    # --- Step 6: Per-printer-group speed reductions ---
     if mode_name == "PLA Delicate":
         mult = DELICATE_SPEED_MULT.get(group, 1.0)
         if mult != 1.0:
             _apply_speed_multiplier(profile, mult)
 
-    # --- Step 8: i3 hard caps (must be last) ---
+    # --- Step 7: i3 hard caps (must be last) ---
     if group == "i3":
         # PLA and PLA Fast on i3: enforce 1mm minimum wall thickness
         # (gantry arm benefits from thicker walls for rigidity)
