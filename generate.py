@@ -770,6 +770,7 @@ UNIVERSAL_OVERRIDES = {
     "detect_thin_wall": "1",
     "reduce_crossing_wall": "1",
     "wall_generator": "arachne",  # variable width walls, better thin features, less gap fill
+    "gap_fill_target": "topbottom",  # fill pinhole gaps on visible surfaces only
     "ensure_vertical_shell_thickness": "ensure_moderate",
     "wall_infill_order": "inner wall/outer wall/inner wall",
     "seam_position": "back",
