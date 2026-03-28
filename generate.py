@@ -2250,6 +2250,11 @@ def generate_filament_profiles(dry_run: bool = False):
                 except (ValueError, IndexError):
                     pass
 
+            # i3 printers: low minimum travel triggers retract+zhop on short moves.
+            # Prevents nozzle dragging across surface on non-retract travels.
+            if group == "i3":
+                profile["filament_retraction_minimum_travel"] = ["0.5"]
+
             # PEI/SuperTack plate keys (NOT cool plate - that's a different coating)
             PEI_PLATE_KEYS = [
                 "eng_plate_temp", "eng_plate_temp_initial_layer",
