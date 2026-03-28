@@ -816,6 +816,11 @@ UNIVERSAL_OVERRIDES = {
     "raft_first_layer_density": "25%",
     "raft_first_layer_expansion": "1",
 
+    # Prime tower (for multi-material, configured as sensible defaults)
+    "enable_prime_tower": "1",
+    "prime_tower_width": "35",
+    "prime_volume": "45",
+
     # Multi-material (configured for when it's needed)
     "flush_into_infill": "1",
     "independent_support_layer_height": "0",
