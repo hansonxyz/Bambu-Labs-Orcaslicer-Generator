@@ -810,7 +810,12 @@ UNIVERSAL_OVERRIDES = {
     "support_bottom_z_distance": "0.15",
     "support_top_z_distance": "0.15",
     "support_object_first_layer_gap": "0.5",
+    "support_filament": "1056",
     "support_speed": "90",
+    # Tree support defaults
+    "tree_support_branch_angle_organic": "60",
+    "tree_support_branch_diameter_angle": "8",
+    "support_object_xy_distance": "0.25",
 
     # Raft
     "raft_first_layer_density": "25%",
@@ -819,7 +824,7 @@ UNIVERSAL_OVERRIDES = {
     # Prime tower (for multi-material, configured as sensible defaults)
     "enable_prime_tower": "1",
     "prime_tower_width": "35",
-    "prime_volume": "45",
+    "prime_volume": "35",
 
     # Multi-material (configured for when it's needed)
     "flush_into_infill": "1",
