@@ -787,6 +787,7 @@ UNIVERSAL_OVERRIDES = {
     # layers. Distributes weak points, improves strength and water-tightness.
     "staggered_inner_seams": "1",
     "brim_type": "no_brim",
+    "skirt_loops": "0",
     # Shell layers: fixed count minimums. Thickness targets below ensure
     # OrcaSlicer adds more layers on small nozzles to meet mm targets.
     "top_shell_layers": "3",
@@ -1012,7 +1013,6 @@ PLA_DRAFT = {
     "sparse_infill_pattern": "cubic",
     # Tree support for easy removal on draft prints
     "support_type": "tree(auto)",
-    "skirt_loops": "2",
     "slow_down_layers": "2",
     "initial_layer_line_width": "105%",
 }
@@ -1046,7 +1046,6 @@ PLA_DELICATE = {
     "sparse_infill_density": "15%",
     # Extra features for small parts
     "interlocking_beam": "1",
-    "skirt_loops": "2",
     "support_threshold_angle": "35",
     "enable_prime_tower": "0",
 }
