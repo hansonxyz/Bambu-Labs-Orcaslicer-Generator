@@ -888,8 +888,8 @@ PLA_STANDARD = {
 # conservative treatment since they're visible. Everything else near stock.
 # Uses crosshatch infill on all printers to reduce vibration at speed.
 PLA_FAST = {
-    "outer_wall_speed": "170",       # 85% of BBL 200 - visible, main quality lever
-    "inner_wall_speed": "250",       # 83% of BBL 300 - hidden
+    "outer_wall_speed": "250",       # match inner wall
+    "inner_wall_speed": "250",       # 83% of BBL 300
     "sparse_infill_speed": "225",    # 83% of BBL 270
     "internal_solid_infill_speed": "225",  # 90% of BBL 250
     "gap_infill_speed": "200",       # 80% of BBL 250
@@ -959,7 +959,7 @@ PETG_ABS = {
 # Low acceleration avoids pressure spikes in the nozzle that cause uneven extrusion.
 # Outer walls and top surfaces get the lowest accel (1500) since they're most visible.
 PLA_SILK = {
-    "outer_wall_speed": "48",
+    "outer_wall_speed": "70",
     "inner_wall_speed": "70",
     "sparse_infill_speed": "55",
     "internal_solid_infill_speed": "70",
@@ -984,7 +984,7 @@ PLA_SILK = {
 # Structural integrity and surface quality don't matter.
 # Single wall, minimal shells, max layer height for nozzle.
 PLA_DRAFT = {
-    "outer_wall_speed": "180",       # 90% of BBL 200
+    "outer_wall_speed": "250",       # match inner wall
     "inner_wall_speed": "250",       # 83% of BBL 300
     "sparse_infill_speed": "250",    # 93% of BBL 270
     "internal_solid_infill_speed": "225",  # 90% of BBL 250
@@ -1055,7 +1055,7 @@ PLA_DELICATE = {
 # Colors bleeding, materials not sticking, prime tower issues all
 # improve with slower speeds.
 PLA_MM = {
-    "outer_wall_speed": "60",
+    "outer_wall_speed": "75",
     "inner_wall_speed": "75",
     "sparse_infill_speed": "55",
     "internal_solid_infill_speed": "75",
@@ -1096,7 +1096,7 @@ PLA_MM = {
 # PVA is fragile. Fine layer height for inter-material bonding.
 # Zero support z-distance for clean PVA dissolution.
 PLA_PETG_PVA_MM = {
-    "outer_wall_speed": "40",
+    "outer_wall_speed": "50",
     "inner_wall_speed": "50",
     "sparse_infill_speed": "55",
     "internal_solid_infill_speed": "55",
