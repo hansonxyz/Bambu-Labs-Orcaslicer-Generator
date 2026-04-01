@@ -1264,8 +1264,8 @@ FILAMENT_B_PLA = {
     "filament_z_hop": ["0.15"],
     "filament_z_hop_types": ["Spiral Lift"],
     # Temps
-    "nozzle_temperature": ["210"],
-    "nozzle_temperature_initial_layer": ["210"],
+    "nozzle_temperature": ["215"],
+    "nozzle_temperature_initial_layer": ["215"],
     "nozzle_temperature_range_high": ["250"],
     "nozzle_temperature_range_low": ["190"],
     "cool_plate_temp": ["40"],
@@ -1984,12 +1984,12 @@ I3_CAPS = {
     },
     "PLA Fast": {
         "max_accel": 7500,
-        "max_speed": 225,
+        "max_speed": 175,
         "travel_cap": 225,
     },
     "PLA Draft": {
         "max_accel": 7500,
-        "max_speed": 225,
+        "max_speed": 175,
         "travel_cap": 225,
     },
     "PLA Delicate": {
@@ -2095,7 +2095,21 @@ def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
         if mult != 1.0:
             _apply_speed_multiplier(profile, mult)
 
-    # --- Step 7: i3 hard caps (must be last) ---
+    # --- Step 7: Printer group extrusion speed caps ---
+    # Cap all extrusion speeds (not travel) to prevent clogging.
+    # CoreXY (enclosed): 225mm/s max extrusion
+    # i3 (gantry): 175mm/s max extrusion
+    if group == "corexy":
+        COREXY_MAX_EXTRUDE = 225
+        for key in list(profile.keys()):
+            if key in SPEED_KEYS and key != "travel_speed":
+                try:
+                    val = int(float(profile[key]))
+                    if val > COREXY_MAX_EXTRUDE:
+                        profile[key] = str(COREXY_MAX_EXTRUDE)
+                except (ValueError, TypeError):
+                    pass
+
     if group == "i3":
         # PLA and PLA Fast on i3: enforce 1mm minimum wall thickness
         # (gantry arm benefits from thicker walls for rigidity)
