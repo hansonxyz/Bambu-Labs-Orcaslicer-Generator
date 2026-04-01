@@ -959,7 +959,7 @@ PETG_ABS = {
 # Low acceleration avoids pressure spikes in the nozzle that cause uneven extrusion.
 # Outer walls and top surfaces get the lowest accel (1500) since they're most visible.
 PLA_SILK = {
-    "outer_wall_speed": "70",
+    "outer_wall_speed": "48",
     "inner_wall_speed": "70",
     "sparse_infill_speed": "55",
     "internal_solid_infill_speed": "70",
@@ -1096,7 +1096,7 @@ PLA_MM = {
 # PVA is fragile. Fine layer height for inter-material bonding.
 # Zero support z-distance for clean PVA dissolution.
 PLA_PETG_PVA_MM = {
-    "outer_wall_speed": "50",
+    "outer_wall_speed": "40",
     "inner_wall_speed": "50",
     "sparse_infill_speed": "55",
     "internal_solid_infill_speed": "55",
