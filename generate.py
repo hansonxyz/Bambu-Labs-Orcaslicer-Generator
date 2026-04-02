@@ -2282,6 +2282,19 @@ def generate_filament_profiles(dry_run: bool = False):
                 "textured_plate_temp", "textured_plate_temp_initial_layer",
             ]
 
+            # i3 PETG: higher nozzle temp (open air loses heat), lower plate temp,
+            # minimal part cooling (open frame + PETG = layer separation with high fan)
+            if group == "i3":
+                fil_type = profile.get("filament_type", [""])[0]
+                if fil_type == "PETG":
+                    profile["nozzle_temperature"] = ["245"]
+                    profile["nozzle_temperature_initial_layer"] = ["245"]
+                    profile["fan_min_speed"] = ["0"]
+                    profile["fan_max_speed"] = ["20"]
+                    profile["overhang_fan_speed"] = ["30"]
+                    for plate_key in PEI_PLATE_KEYS:
+                        profile[plate_key] = ["72"]
+
             # Plate temps for PLA-based filaments depend on enclosure.
             # Only override PEI/SuperTack plates - cool plate stays at 35°C always
             # (it's a low-temp coating, PLA softens above 55°C on this surface).
