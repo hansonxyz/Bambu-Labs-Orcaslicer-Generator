@@ -2038,8 +2038,8 @@ def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
         profile["sparse_infill_density"] = "14%" if group == "corexy" else "18%"
         # i3 PETG: very slow first layer (5mm/s), slower subsequent (25mm/s)
         if group == "i3":
-            profile["initial_layer_speed"] = "6"
-            profile["initial_layer_infill_speed"] = "6"
+            profile["initial_layer_speed"] = "8"
+            profile["initial_layer_infill_speed"] = "8"
             profile["outer_wall_speed"] = "35"
             profile["inner_wall_speed"] = "35"
             profile["sparse_infill_speed"] = "35"
