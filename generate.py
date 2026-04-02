@@ -2292,6 +2292,7 @@ def generate_filament_profiles(dry_run: bool = False):
                     profile["fan_min_speed"] = ["0"]
                     profile["fan_max_speed"] = ["20"]
                     profile["overhang_fan_speed"] = ["30"]
+                    profile["filament_retract_lift_above"] = ["0"]  # z-hop from layer 0
                     for plate_key in PEI_PLATE_KEYS:
                         profile[plate_key] = ["72"]
 
