@@ -2035,6 +2035,15 @@ def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
     # corexy gyroid 14%, i3 crosshatch 18% (crosshatch is weaker, compensate)
     if mode_name == "PETG ABS":
         profile["sparse_infill_density"] = "14%" if group == "corexy" else "18%"
+        # i3 PETG: 10% faster first layer than corexy (open air cools faster)
+        if group == "i3":
+            try:
+                fl_speed = int(float(profile.get("initial_layer_speed", "12")))
+                fl_infill = int(float(profile.get("initial_layer_infill_speed", "15")))
+                profile["initial_layer_speed"] = str(int(fl_speed * 1.10))
+                profile["initial_layer_infill_speed"] = str(int(fl_infill * 1.10))
+            except (ValueError, TypeError):
+                pass
 
     if group == "i3":
         _raise_infill_to_max_speed(profile)
@@ -2287,10 +2296,13 @@ def generate_filament_profiles(dry_run: bool = False):
             if group == "i3":
                 fil_type = profile.get("filament_type", [""])[0]
                 if fil_type == "PETG":
-                    profile["nozzle_temperature"] = ["245"]
-                    profile["nozzle_temperature_initial_layer"] = ["245"]
+                    profile["nozzle_temperature"] = ["240"]
+                    profile["nozzle_temperature_initial_layer"] = ["240"]
+                    profile["filament_max_volumetric_speed"] = ["2.5"]  # lower flow for reliability
                     profile["fan_min_speed"] = ["0"]
                     profile["fan_max_speed"] = ["20"]
+                    profile["close_fan_the_first_x_layers"] = ["0"]  # 20% fan from layer 0
+                    profile["full_fan_speed_layer"] = ["0"]
                     profile["overhang_fan_speed"] = ["30"]
                     profile["filament_retract_lift_above"] = ["0"]  # z-hop from layer 0
                     for plate_key in PEI_PLATE_KEYS:
