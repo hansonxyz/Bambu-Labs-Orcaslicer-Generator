@@ -938,6 +938,7 @@ PETG_ABS = {
     "travel_acceleration": "5000",
     # Layer
     "layer_height": "0.20",
+    "initial_layer_line_width": "110%",  # less squish than PLA's 125%, PETG hates being squished
     # Walls - alternate extra wall for PETG bonding strength
     "alternate_extra_wall": "1",
     # Overhangs - PETG droops more
@@ -2298,7 +2299,6 @@ def generate_filament_profiles(dry_run: bool = False):
                 if fil_type == "PETG":
                     profile["nozzle_temperature"] = ["240"]
                     profile["nozzle_temperature_initial_layer"] = ["240"]
-                    profile["filament_max_volumetric_speed"] = ["2.5"]  # lower flow for reliability
                     profile["fan_min_speed"] = ["0"]
                     profile["fan_max_speed"] = ["20"]
                     profile["close_fan_the_first_x_layers"] = ["0"]  # 20% fan from layer 0
