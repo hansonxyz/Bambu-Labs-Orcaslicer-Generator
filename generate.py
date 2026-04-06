@@ -927,8 +927,8 @@ PETG_ABS = {
     "support_interface_speed": "30",
     "travel_speed": "200",
     # Very slow first layer - critical for PETG
-    "initial_layer_speed": "12",
-    "initial_layer_infill_speed": "15",
+    "initial_layer_speed": "10",
+    "initial_layer_infill_speed": "12",
     "initial_layer_travel_speed": "30",
     # Acceleration - moderate, all uniform
     "default_acceleration": "2500",
