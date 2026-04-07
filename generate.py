@@ -2033,6 +2033,16 @@ def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
     profile.update(deepcopy(PRINTER_DELTAS[group]))
     profile.update(deepcopy(MATERIAL_MODES[mode_name]))
 
+    # Gyroid infill speed cap: gyroid causes aggressive direction changes,
+    # cap at 55mm/s to reduce vibration regardless of printer type
+    if profile.get("sparse_infill_pattern") == "gyroid":
+        try:
+            infill_speed = int(float(profile.get("sparse_infill_speed", "0")))
+            if infill_speed > 55:
+                profile["sparse_infill_speed"] = "55"
+        except (ValueError, TypeError):
+            pass
+
     # PETG/ABS/ASA: higher infill density than PLA for structural strength
     # corexy gyroid 14%, i3 crosshatch 18% (crosshatch is weaker, compensate)
     if mode_name == "PETG ABS":
