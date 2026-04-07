@@ -917,15 +917,16 @@ PLA_FAST = {
 # Very slow first layer is critical for PETG bed adhesion.
 # 45 mm/s is Brian's tested sweet spot for PETG.
 PETG_ABS = {
-    "outer_wall_speed": "45",
-    "inner_wall_speed": "45",
-    "sparse_infill_speed": "45",
-    "internal_solid_infill_speed": "45",
+    "outer_wall_speed": "55",
+    "inner_wall_speed": "55",
+    "sparse_infill_speed": "55",
+    "internal_solid_infill_speed": "55",
     "gap_infill_speed": "30",
     "top_surface_speed": "45",
-    "support_speed": "45",
+    "support_speed": "55",
     "support_interface_speed": "30",
     "travel_speed": "200",
+    "slow_down_layers": "2",
     # Very slow first layer - critical for PETG
     "initial_layer_speed": "10",
     "initial_layer_infill_speed": "12",
@@ -1315,7 +1316,7 @@ FILAMENT_B_PETG = {
     "filament_density": ["1.27"],
     "filament_cost": ["16"],
     "filament_flow_ratio": ["0.95"],
-    "filament_max_volumetric_speed": ["3.5"],
+    "filament_max_volumetric_speed": ["4"],
     "filament_notes": ["2.8 flow rate = 35mm/s, we are shooting slightly over that at 3"],
     # Retraction
     "filament_retraction_length": ["0.8"],
