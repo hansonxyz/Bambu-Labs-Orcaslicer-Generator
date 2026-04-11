@@ -942,6 +942,8 @@ PETG_ABS = {
     "initial_layer_line_width": "110%",  # less squish than PLA's 125%, PETG hates being squished
     # Walls - alternate extra wall for PETG bonding strength
     "alternate_extra_wall": "1",
+    # Flush into infill disabled - PETG is often translucent, colored purge shows through
+    "flush_into_infill": "0",
     # Overhangs - PETG droops more
     "overhang_1_4_speed": "30",
     "overhang_2_4_speed": "30",
