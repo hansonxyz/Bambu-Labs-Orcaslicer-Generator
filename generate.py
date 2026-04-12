@@ -828,7 +828,7 @@ UNIVERSAL_OVERRIDES = {
     "prime_volume": "35",
 
     # Multi-material (configured for when it's needed)
-    "flush_into_infill": "1",
+    "flush_into_infill": "0",
     "independent_support_layer_height": "0",
 }
 
@@ -942,8 +942,6 @@ PETG_ABS = {
     "initial_layer_line_width": "110%",  # less squish than PLA's 125%, PETG hates being squished
     # Walls - alternate extra wall for PETG bonding strength
     "alternate_extra_wall": "1",
-    # Flush into infill disabled - PETG is often translucent, colored purge shows through
-    "flush_into_infill": "0",
     # Overhangs - PETG droops more
     "overhang_1_4_speed": "30",
     "overhang_2_4_speed": "30",
@@ -1082,7 +1080,6 @@ PLA_MM = {
     # Wall thickness target: 1mm minimum for color separation (calculated dynamically)
     "min_wall_thickness": "1.0",
     # MM-specific
-    "flush_into_infill": "1",
     "flush_into_support": "0",
     "timelapse_type": "1",
     "support_filament": "1",
@@ -1123,7 +1120,6 @@ PLA_PETG_PVA_MM = {
     # Wall thickness target: 1mm minimum (calculated dynamically)
     "min_wall_thickness": "1.0",
     # MM-specific - PVA support settings
-    "flush_into_infill": "1",
     "timelapse_type": "1",
     "support_filament": "1",
     "support_interface_filament": "4",
