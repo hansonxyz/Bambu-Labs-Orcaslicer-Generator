@@ -915,10 +915,11 @@ PLA_FAST = {
 # --- PETG/ABS ---
 # Slow and careful. PETG needs restraint - stringy, worse layer adhesion.
 # Very slow first layer is critical for PETG bed adhesion.
-# 45 mm/s is Brian's tested sweet spot for PETG.
+# Outer walls 35mm/s for surface quality, inner walls 50mm/s.
+# reduce_infill_retraction disabled to force retraction on infill-to-wall transitions.
 PETG_ABS = {
-    "outer_wall_speed": "55",
-    "inner_wall_speed": "55",
+    "outer_wall_speed": "35",
+    "inner_wall_speed": "50",
     "sparse_infill_speed": "55",
     "internal_solid_infill_speed": "55",
     "gap_infill_speed": "30",
@@ -931,9 +932,9 @@ PETG_ABS = {
     "initial_layer_speed": "10",
     "initial_layer_infill_speed": "12",
     "initial_layer_travel_speed": "30",
-    # Acceleration - moderate, all uniform
+    # Acceleration - slow outer wall for surface quality
     "default_acceleration": "2500",
-    "outer_wall_acceleration": "2500",
+    "outer_wall_acceleration": "1500",
     "inner_wall_acceleration": "2500",
     "top_surface_acceleration": "2500",
     "travel_acceleration": "5000",
@@ -953,6 +954,8 @@ PETG_ABS = {
     # Infill - density set per printer group in build_profile:
     # corexy (gyroid): 14%, i3 (crosshatch): 18%
     "support_threshold_angle": "35",
+    # Surface quality - force retraction on infill-to-wall transitions
+    "reduce_infill_retraction": "0",
 }
 
 # --- PLA Silk ---
@@ -1317,16 +1320,16 @@ FILAMENT_B_PETG = {
     "filament_max_volumetric_speed": ["5"],
     "filament_notes": ["2.8 flow rate = 35mm/s, we are shooting slightly over that at 3"],
     # Retraction
-    "filament_retraction_length": ["0.8"],
+    "filament_retraction_length": ["1.0"],
     "filament_retraction_speed": ["40"],
-    "filament_deretraction_speed": ["35"],
+    "filament_deretraction_speed": ["28"],
     "filament_retract_before_wipe": ["75%"],
     "filament_wipe": ["1"],
-    "filament_wipe_distance": ["0.3"],
-    "filament_z_hop": ["0.15"],
+    "filament_wipe_distance": ["0.6"],
+    "filament_z_hop": ["0.1"],
     "filament_z_hop_types": ["Spiral Lift"],
     # Temps
-    "nozzle_temperature": ["238"],
+    "nozzle_temperature": ["233"],
     "nozzle_temperature_initial_layer": ["238"],
     "nozzle_temperature_range_high": ["260"],
     "nozzle_temperature_range_low": ["225"],
@@ -1363,8 +1366,8 @@ FILAMENT_B_PETG = {
     "slow_down_layer_time": ["12"],
     "slow_down_min_speed": ["9"],
     # Pressure advance
-    "enable_pressure_advance": ["0"],
-    "pressure_advance": ["0.01"],
+    "enable_pressure_advance": ["1"],
+    "pressure_advance": ["0.025"],
     # Gcode
     "filament_start_gcode": ["; adjust z up slightly\nM106 P3 S60\n\nM221 S100 ;Reset Flowrate"],
     "filament_end_gcode": ["\nM106 P3 S0\n"],
