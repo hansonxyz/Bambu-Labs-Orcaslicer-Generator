@@ -1314,7 +1314,7 @@ FILAMENT_B_PETG = {
     "filament_density": ["1.27"],
     "filament_cost": ["16"],
     "filament_flow_ratio": ["0.95"],
-    "filament_max_volumetric_speed": ["4"],
+    "filament_max_volumetric_speed": ["5"],
     "filament_notes": ["2.8 flow rate = 35mm/s, we are shooting slightly over that at 3"],
     # Retraction
     "filament_retraction_length": ["0.8"],
@@ -1326,8 +1326,8 @@ FILAMENT_B_PETG = {
     "filament_z_hop": ["0.15"],
     "filament_z_hop_types": ["Spiral Lift"],
     # Temps
-    "nozzle_temperature": ["232"],
-    "nozzle_temperature_initial_layer": ["237"],
+    "nozzle_temperature": ["238"],
+    "nozzle_temperature_initial_layer": ["238"],
     "nozzle_temperature_range_high": ["260"],
     "nozzle_temperature_range_low": ["225"],
     "cool_plate_temp": ["75"],
