@@ -915,7 +915,7 @@ PLA_FAST = {
 # --- PETG/ABS ---
 # Slow and careful. PETG needs restraint - stringy, worse layer adhesion.
 # Very slow first layer is critical for PETG bed adhesion.
-# Walls 25mm/s, infill 35mm/s. First layer 4mm/s walls, 6mm/s infill.
+# Walls 25mm/s, infill 35mm/s. First layer 7mm/s walls, 9mm/s infill.
 # reduce_infill_retraction disabled to force retraction on infill-to-wall transitions.
 PETG_ABS = {
     "outer_wall_speed": "25",
@@ -929,8 +929,8 @@ PETG_ABS = {
     "travel_speed": "200",
     "slow_down_layers": "2",
     # Very slow first layer - critical for PETG
-    "initial_layer_speed": "4",
-    "initial_layer_infill_speed": "6",
+    "initial_layer_speed": "7",
+    "initial_layer_infill_speed": "9",
     "initial_layer_travel_speed": "30",
     # Acceleration - slow outer wall for surface quality
     "default_acceleration": "2500",
