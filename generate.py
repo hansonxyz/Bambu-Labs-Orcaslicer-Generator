@@ -915,17 +915,17 @@ PLA_FAST = {
 # --- PETG/ABS ---
 # Slow and careful. PETG needs restraint - stringy, worse layer adhesion.
 # Very slow first layer is critical for PETG bed adhesion.
-# Walls 25mm/s, infill 35mm/s. First layer 7mm/s walls, 9mm/s infill.
+# Flat 45mm/s for all print speeds. First layer 7mm/s walls, 9mm/s infill.
 # reduce_infill_retraction disabled to force retraction on infill-to-wall transitions.
 PETG_ABS = {
-    "outer_wall_speed": "25",
-    "inner_wall_speed": "25",
-    "sparse_infill_speed": "35",
-    "internal_solid_infill_speed": "35",
-    "gap_infill_speed": "30",
+    "outer_wall_speed": "45",
+    "inner_wall_speed": "45",
+    "sparse_infill_speed": "45",
+    "internal_solid_infill_speed": "45",
+    "gap_infill_speed": "45",
     "top_surface_speed": "45",
-    "support_speed": "55",
-    "support_interface_speed": "30",
+    "support_speed": "45",
+    "support_interface_speed": "45",
     "travel_speed": "200",
     "slow_down_layers": "2",
     # Very slow first layer - critical for PETG
@@ -943,11 +943,11 @@ PETG_ABS = {
     "initial_layer_line_width": "110%",  # less squish than PLA's 125%, PETG hates being squished
     # Walls - alternate extra wall for PETG bonding strength
     "alternate_extra_wall": "1",
-    # Overhangs - PETG droops more
-    "overhang_1_4_speed": "30",
-    "overhang_2_4_speed": "30",
-    "overhang_4_4_speed": "30",
-    "bridge_speed": "30",
+    # Overhangs - flat 45mm/s like all other print speeds
+    "overhang_1_4_speed": "45",
+    "overhang_2_4_speed": "45",
+    "overhang_4_4_speed": "45",
+    "bridge_speed": "45",
     # Shells
     "top_shell_thickness": "0.8",
     "bottom_shell_thickness": "0.6",
