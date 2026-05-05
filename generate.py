@@ -915,13 +915,13 @@ PLA_FAST = {
 # --- PETG/ABS ---
 # Slow and careful. PETG needs restraint - stringy, worse layer adhesion.
 # Very slow first layer is critical for PETG bed adhesion.
-# Outer walls 35mm/s for surface quality, inner walls 50mm/s.
+# Walls 25mm/s, infill 35mm/s. First layer 4mm/s walls, 6mm/s infill.
 # reduce_infill_retraction disabled to force retraction on infill-to-wall transitions.
 PETG_ABS = {
-    "outer_wall_speed": "35",
-    "inner_wall_speed": "50",
-    "sparse_infill_speed": "55",
-    "internal_solid_infill_speed": "55",
+    "outer_wall_speed": "25",
+    "inner_wall_speed": "25",
+    "sparse_infill_speed": "35",
+    "internal_solid_infill_speed": "35",
     "gap_infill_speed": "30",
     "top_surface_speed": "45",
     "support_speed": "55",
@@ -929,8 +929,8 @@ PETG_ABS = {
     "travel_speed": "200",
     "slow_down_layers": "2",
     # Very slow first layer - critical for PETG
-    "initial_layer_speed": "10",
-    "initial_layer_infill_speed": "12",
+    "initial_layer_speed": "4",
+    "initial_layer_infill_speed": "6",
     "initial_layer_travel_speed": "30",
     # Acceleration - slow outer wall for surface quality
     "default_acceleration": "2500",
@@ -1329,34 +1329,34 @@ FILAMENT_B_PETG = {
     "filament_z_hop": ["0.1"],
     "filament_z_hop_types": ["Spiral Lift"],
     # Temps
-    "nozzle_temperature": ["233"],
-    "nozzle_temperature_initial_layer": ["238"],
+    "nozzle_temperature": ["245"],
+    "nozzle_temperature_initial_layer": ["240"],
     "nozzle_temperature_range_high": ["260"],
     "nozzle_temperature_range_low": ["225"],
-    "cool_plate_temp": ["75"],
-    "cool_plate_temp_initial_layer": ["77"],
-    "eng_plate_temp": ["77"],
-    "eng_plate_temp_initial_layer": ["77"],
-    "hot_plate_temp": ["77"],
-    "hot_plate_temp_initial_layer": ["77"],
-    "supertack_plate_temp": ["77"],
-    "supertack_plate_temp_initial_layer": ["77"],
-    "textured_cool_plate_temp": ["77"],
-    "textured_cool_plate_temp_initial_layer": ["77"],
-    "textured_plate_temp": ["77"],
-    "textured_plate_temp_initial_layer": ["77"],
+    "cool_plate_temp": ["60"],
+    "cool_plate_temp_initial_layer": ["65"],
+    "eng_plate_temp": ["60"],
+    "eng_plate_temp_initial_layer": ["65"],
+    "hot_plate_temp": ["60"],
+    "hot_plate_temp_initial_layer": ["65"],
+    "supertack_plate_temp": ["60"],
+    "supertack_plate_temp_initial_layer": ["65"],
+    "textured_cool_plate_temp": ["60"],
+    "textured_cool_plate_temp_initial_layer": ["65"],
+    "textured_plate_temp": ["60"],
+    "textured_plate_temp_initial_layer": ["65"],
     "temperature_vitrification": ["85"],
     # Fan
-    "activate_air_filtration": ["0"],
-    "additional_cooling_fan_speed": ["20"],
-    "complete_print_exhaust_fan_speed": ["20"],
-    "during_print_exhaust_fan_speed": ["20"],
+    "activate_air_filtration": ["1"],
+    "additional_cooling_fan_speed": ["10"],
+    "complete_print_exhaust_fan_speed": ["100"],
+    "during_print_exhaust_fan_speed": ["100"],
     "enable_overhang_bridge_fan": ["1"],
     "fan_cooling_layer_time": ["35"],
-    "fan_max_speed": ["45"],
-    "fan_min_speed": ["5"],
+    "fan_max_speed": ["30"],
+    "fan_min_speed": ["10"],
     "full_fan_speed_layer": ["2"],
-    "close_fan_the_first_x_layers": ["1"],
+    "close_fan_the_first_x_layers": ["3"],
     "overhang_fan_speed": ["90"],
     "overhang_fan_threshold": ["10%"],
     "reduce_fan_stop_start_freq": ["0"],
@@ -2048,19 +2048,11 @@ def build_profile(printer: str, nozzle: float, mode_name: str) -> dict:
     # corexy gyroid 14%, i3 crosshatch 18% (crosshatch is weaker, compensate)
     if mode_name == "PETG ABS":
         profile["sparse_infill_density"] = "14%" if group == "corexy" else "18%"
-        # i3 PETG: very slow first layer (5mm/s), slower subsequent (25mm/s)
-        if group == "i3":
-            profile["initial_layer_speed"] = "8"
-            profile["initial_layer_infill_speed"] = "8"
-            profile["outer_wall_speed"] = "35"
-            profile["inner_wall_speed"] = "35"
-            profile["sparse_infill_speed"] = "35"
-            profile["internal_solid_infill_speed"] = "35"
-            profile["gap_infill_speed"] = "35"
-            profile["top_surface_speed"] = "35"
-            profile["support_speed"] = "35"
 
-    if group == "i3":
+    # i3 raises infill speed to match the fastest non-infill speed (crosshatch
+    # is gentle enough to not need slowing down). Skip for PETG: user wants
+    # infill held to 35mm/s regardless of higher top-surface/wall numbers.
+    if group == "i3" and mode_name != "PETG ABS":
         _raise_infill_to_max_speed(profile)
 
     # --- Step 4: Nozzle scaling ---
@@ -2306,21 +2298,30 @@ def generate_filament_profiles(dry_run: bool = False):
                 "textured_plate_temp", "textured_plate_temp_initial_layer",
             ]
 
-            # i3 PETG: higher nozzle temp (open air loses heat), lower plate temp,
-            # minimal part cooling (open frame + PETG = layer separation with high fan)
+            # i3 PETG: lower overhang fan (open frame + PETG + high overhang
+            # fan = layer separation), z-hop from layer 0, and bump bed temp
+            # to 70/70 (the A1's heated bed can't hold the base 65/60 reliably).
+            # Other fan/nozzle-temp settings come from the base PETG filament
+            # profile (uniform across printers).
             if group == "i3":
                 fil_type = profile.get("filament_type", [""])[0]
                 if fil_type == "PETG":
-                    profile["nozzle_temperature"] = ["240"]
-                    profile["nozzle_temperature_initial_layer"] = ["250"]
-                    profile["fan_min_speed"] = ["0"]
-                    profile["fan_max_speed"] = ["20"]
-                    profile["close_fan_the_first_x_layers"] = ["0"]
-                    profile["full_fan_speed_layer"] = ["0"]
                     profile["overhang_fan_speed"] = ["30"]
                     profile["filament_retract_lift_above"] = ["0"]  # z-hop from layer 0
+                    profile["cool_plate_temp"] = ["70"]
+                    profile["cool_plate_temp_initial_layer"] = ["70"]
                     for plate_key in PEI_PLATE_KEYS:
-                        profile[plate_key] = ["75"]
+                        profile[plate_key] = ["70"]
+
+            # X1C PETG: hold bed at 65 for both first and subsequent layers
+            # (the chamber retains heat well, so no need to drop after layer 1).
+            if printer_key == "X1C":
+                fil_type = profile.get("filament_type", [""])[0]
+                if fil_type == "PETG":
+                    profile["cool_plate_temp"] = ["65"]
+                    profile["cool_plate_temp_initial_layer"] = ["65"]
+                    for plate_key in PEI_PLATE_KEYS:
+                        profile[plate_key] = ["65"]
 
             # Plate temps for PLA-based filaments depend on enclosure.
             # Only override PEI/SuperTack plates - cool plate stays at 35°C always
