@@ -35,13 +35,20 @@ Enable the ones you own:
 | Anycubic Kobra S1 Max | CoreXY | Yes | 0.4 / 0.6 / 0.8 |
 | Anycubic Kobra X | bedslinger | No | 0.4 |
 
-The Anycubic profiles inherit each printer's **default OrcaSlicer start/end
-gcode**, but every speed, temperature, and acceleration setting mirrors the
-equivalent Bambu profile: enclosed models (Kobra S1 / S1 Max) mirror the X1C,
-open-frame models (Kobra 3 / 3 Max / X) mirror the A1. Anycubic support requires
-the built-in Anycubic profiles that ship with current OrcaSlicer. Nozzle sizes
-without a matching Anycubic "Standard" preset (Kobra 3's 0.2, S1 Max's 0.25) are
-omitted.
+**Elegoo** (all OrcaSlicer-supported FDM models) are supported the same way:
+
+| Enclosed CoreXY (mirror X1C) | Open-frame bedslingers (mirror A1) |
+|------------------------------|------------------------------------|
+| Centauri, Centauri Carbon, Centauri Carbon 2 | Neptune, Neptune 2 / 2D / 2S / 3 / 3 Max / 3 Plus / 3 Pro, Neptune 4 / 4 Max / 4 Plus / 4 Pro, Neptune X, OrangeStorm Giga |
+
+The Anycubic and Elegoo profiles inherit each printer's **default OrcaSlicer
+start/end gcode**, but every speed, temperature, and acceleration setting mirrors
+the equivalent Bambu profile: enclosed models mirror the X1C, open-frame models
+mirror the A1. This requires the built-in Anycubic / Elegoo profiles that ship
+with current OrcaSlicer (enable those vendors in OrcaSlicer's printer selection).
+Nozzle sizes without a matching vendor "Standard" preset (e.g. Anycubic Kobra 3's
+0.2, S1 Max's 0.25, and Elegoo's 1.0mm variants) are omitted; the older Elegoo
+Neptunes (2 / 2D / 2S / 3 / X) share Elegoo's common "Neptune" process preset.
 
 ## Material Modes
 

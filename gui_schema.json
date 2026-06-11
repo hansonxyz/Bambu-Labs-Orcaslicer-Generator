@@ -2,7 +2,7 @@
     "_comment": "Declarative UI definition for the OrcaSlicer Profile Generator GUI. The GUI (gui.py) renders itself entirely from this file - it contains NO hard-coded printers, filaments, or options. To expose a new printer, filament, or option, add an entry here; no Python changes are needed. Current values are persisted separately in config.json; the 'default' fields below are only used on first run when no saved value exists.",
     "app": {
         "title": "OrcaSlicer Profile Generator",
-        "subtitle": "Algorithmic process / machine / filament profiles for Bambu Lab printers",
+        "subtitle": "Algorithmic process / machine / filament profiles for Bambu Lab, Anycubic, and Elegoo printers",
         "version": "1.0.0"
     },
     "groups": [
@@ -25,7 +25,24 @@
                 {"key": "Kobra3Max",  "label": "Anycubic Kobra 3 Max", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.4/0.6/0.8)", "default": false},
                 {"key": "KobraS1",    "label": "Anycubic Kobra S1",    "help": "Enclosed CoreXY - mirrors X1C (nozzle 0.4)", "default": false},
                 {"key": "KobraS1Max", "label": "Anycubic Kobra S1 Max","help": "Enclosed CoreXY - mirrors X1C (nozzles 0.4/0.6/0.8)", "default": false},
-                {"key": "KobraX",     "label": "Anycubic Kobra X",     "help": "Open-frame bedslinger - mirrors A1 (nozzle 0.4)", "default": false}
+                {"key": "KobraX",     "label": "Anycubic Kobra X",     "help": "Open-frame bedslinger - mirrors A1 (nozzle 0.4)", "default": false},
+                {"key": "Centauri", "label": "Elegoo Centauri", "help": "Enclosed CoreXY - mirrors X1C (nozzles 0.2/0.4/0.6/0.8)", "default": false},
+                {"key": "CentauriCarbon", "label": "Elegoo Centauri Carbon", "help": "Enclosed CoreXY - mirrors X1C (nozzles 0.2/0.4/0.6/0.8)", "default": false},
+                {"key": "CentauriCarbon2", "label": "Elegoo Centauri Carbon 2", "help": "Enclosed CoreXY - mirrors X1C (nozzles 0.2/0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune", "label": "Elegoo Neptune", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune2", "label": "Elegoo Neptune 2", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune2D", "label": "Elegoo Neptune 2D", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune2S", "label": "Elegoo Neptune 2S", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune3", "label": "Elegoo Neptune 3", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune3Max", "label": "Elegoo Neptune 3 Max", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.2/0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune3Plus", "label": "Elegoo Neptune 3 Plus", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.2/0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune3Pro", "label": "Elegoo Neptune 3 Pro", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.2/0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune4", "label": "Elegoo Neptune 4", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.2/0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune4Max", "label": "Elegoo Neptune 4 Max", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.2/0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune4Plus", "label": "Elegoo Neptune 4 Plus", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.2/0.4/0.6/0.8)", "default": false},
+                {"key": "Neptune4Pro", "label": "Elegoo Neptune 4 Pro", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.2/0.4/0.6/0.8)", "default": false},
+                {"key": "NeptuneX", "label": "Elegoo Neptune X", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.4/0.6/0.8)", "default": false},
+                {"key": "OrangeStormGiga", "label": "Elegoo OrangeStorm Giga", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.4/0.6/0.8)", "default": false}
             ]
         },
         {

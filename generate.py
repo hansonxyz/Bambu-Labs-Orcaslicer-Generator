@@ -84,6 +84,25 @@ ENABLED_PRINTERS = {
     "KobraS1":   False,  # Anycubic Kobra S1 (enclosed CoreXY -> mirrors X1C)
     "KobraS1Max":False,  # Anycubic Kobra S1 Max (enclosed CoreXY -> mirrors X1C)
     "KobraX":    False,  # Anycubic Kobra X (open-frame bedslinger -> mirrors A1)
+
+    # Elegoo (all OrcaSlicer-supported FDM models)
+    "Centauri": False,
+    "CentauriCarbon": False,
+    "CentauriCarbon2": False,
+    "Neptune": False,
+    "Neptune2": False,
+    "Neptune2D": False,
+    "Neptune2S": False,
+    "Neptune3": False,
+    "Neptune3Max": False,
+    "Neptune3Plus": False,
+    "Neptune3Pro": False,
+    "Neptune4": False,
+    "Neptune4Max": False,
+    "Neptune4Plus": False,
+    "Neptune4Pro": False,
+    "NeptuneX": False,
+    "OrangeStormGiga": False,
 }
 
 # =============================================================================
@@ -217,6 +236,19 @@ if _CONFIG_FILE.exists():
 #   no such preset and are omitted; machine/filament loops skip absent nozzles.
 # - base_id in the .info files is left empty: upstream Anycubic presets carry
 #   copy-pasted/missing setting_ids, and inheritance resolves by name regardless.
+#
+# NON-BAMBU PRINTERS: ELEGOO (all OrcaSlicer-supported FDM models)
+# ----------------------------------------------------------------
+# Identical mechanism to Anycubic. Enclosed CoreXY models (Centauri, Centauri
+# Carbon, Centauri Carbon 2) -> "corexy", mirror the X1C. Open-frame bedslingers
+# (the Neptune family and OrangeStorm Giga) -> "i3", mirror the A1. Two Elegoo
+# quirks to note:
+# - Process presets use Elegoo's SHORT model codes in the @-suffix (C, CC, CC2,
+#   N3Pro, N4Pro, Giga, ...), while machine presets use the full model name. The
+#   older Neptunes (2, 2D, 2S, 3, X) have no model-specific process preset and
+#   share Elegoo's common "Neptune" process (so 0.4/0.6/0.8 only).
+# - Elegoo ships 1.0mm nozzle presets the generator does not scale; those are
+#   omitted, as are nozzle sizes lacking a canonical "Standard" process preset.
 #
 # MATERIAL MODES
 # --------------
@@ -590,6 +622,25 @@ PRINTER_GROUP = {
     "KobraS1":   "corexy",
     "KobraS1Max":"corexy",
     "KobraX":    "i3",
+
+    # Elegoo: enclosed Centauri family -> corexy; Neptune/Giga -> i3
+    "Centauri": "corexy",
+    "CentauriCarbon": "corexy",
+    "CentauriCarbon2": "corexy",
+    "Neptune": "i3",
+    "Neptune2": "i3",
+    "Neptune2D": "i3",
+    "Neptune2S": "i3",
+    "Neptune3": "i3",
+    "Neptune3Max": "i3",
+    "Neptune3Plus": "i3",
+    "Neptune3Pro": "i3",
+    "Neptune4": "i3",
+    "Neptune4Max": "i3",
+    "Neptune4Plus": "i3",
+    "Neptune4Pro": "i3",
+    "NeptuneX": "i3",
+    "OrangeStormGiga": "i3",
 }
 
 # Whether the printer has an enclosure (affects ABS/ASA availability)
@@ -606,6 +657,25 @@ PRINTER_ENCLOSED = {
     "KobraS1":   True,    # enclosed CoreXY
     "KobraS1Max":True,    # enclosed CoreXY
     "KobraX":    False,
+
+    # Elegoo
+    "Centauri": True,
+    "CentauriCarbon": True,
+    "CentauriCarbon2": True,
+    "Neptune": False,
+    "Neptune2": False,
+    "Neptune2D": False,
+    "Neptune2S": False,
+    "Neptune3": False,
+    "Neptune3Max": False,
+    "Neptune3Plus": False,
+    "Neptune3Pro": False,
+    "Neptune4": False,
+    "Neptune4Max": False,
+    "Neptune4Plus": False,
+    "Neptune4Pro": False,
+    "NeptuneX": False,
+    "OrangeStormGiga": False,
 }
 
 # Mirror target: which Bambu printer's per-printer (key-specific) tweaks a
@@ -619,6 +689,25 @@ PRINTER_MIRRORS = {
     "KobraS1":   "X1C",
     "KobraS1Max":"X1C",
     "KobraX":    "A1",
+
+    # Elegoo
+    "Centauri": "X1C",
+    "CentauriCarbon": "X1C",
+    "CentauriCarbon2": "X1C",
+    "Neptune": "A1",
+    "Neptune2": "A1",
+    "Neptune2D": "A1",
+    "Neptune2S": "A1",
+    "Neptune3": "A1",
+    "Neptune3Max": "A1",
+    "Neptune3Plus": "A1",
+    "Neptune3Pro": "A1",
+    "Neptune4": "A1",
+    "Neptune4Max": "A1",
+    "Neptune4Plus": "A1",
+    "Neptune4Pro": "A1",
+    "NeptuneX": "A1",
+    "OrangeStormGiga": "A1",
 }
 
 # Profile name suffix per printer (X1C is default, no suffix)
@@ -635,6 +724,25 @@ PRINTER_SUFFIX = {
     "KobraS1":   " Kobra S1",
     "KobraS1Max":" Kobra S1 Max",
     "KobraX":    " Kobra X",
+
+    # Elegoo
+    "Centauri": " Centauri",
+    "CentauriCarbon": " Centauri Carbon",
+    "CentauriCarbon2": " Centauri Carbon 2",
+    "Neptune": " Neptune",
+    "Neptune2": " Neptune 2",
+    "Neptune2D": " Neptune 2D",
+    "Neptune2S": " Neptune 2S",
+    "Neptune3": " Neptune 3",
+    "Neptune3Max": " Neptune 3 Max",
+    "Neptune3Plus": " Neptune 3 Plus",
+    "Neptune3Pro": " Neptune 3 Pro",
+    "Neptune4": " Neptune 4",
+    "Neptune4Max": " Neptune 4 Max",
+    "Neptune4Plus": " Neptune 4 Plus",
+    "Neptune4Pro": " Neptune 4 Pro",
+    "NeptuneX": " Neptune X",
+    "OrangeStormGiga": " OrangeStorm Giga",
 }
 
 # Filament profile suffix per printer (used in filament naming)
@@ -653,6 +761,25 @@ FILAMENT_PRINTER_SUFFIX = {
     "KobraS1":   " Kobra S1",
     "KobraS1Max":" Kobra S1 Max",
     "KobraX":    " Kobra X",
+
+    # Elegoo
+    "Centauri": " Centauri",
+    "CentauriCarbon": " Centauri Carbon",
+    "CentauriCarbon2": " Centauri Carbon 2",
+    "Neptune": " Neptune",
+    "Neptune2": " Neptune 2",
+    "Neptune2D": " Neptune 2D",
+    "Neptune2S": " Neptune 2S",
+    "Neptune3": " Neptune 3",
+    "Neptune3Max": " Neptune 3 Max",
+    "Neptune3Plus": " Neptune 3 Plus",
+    "Neptune3Pro": " Neptune 3 Pro",
+    "Neptune4": " Neptune 4",
+    "Neptune4Max": " Neptune 4 Max",
+    "Neptune4Plus": " Neptune 4 Plus",
+    "Neptune4Pro": " Neptune 4 Pro",
+    "NeptuneX": " Neptune X",
+    "OrangeStormGiga": " OrangeStorm Giga",
 }
 
 ALL_PRINTERS = {
@@ -906,6 +1033,367 @@ ALL_PRINTERS = {
         },
         "machine_base_profiles": {
             0.4: ("Anycubic Kobra X 0.4 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+
+    # --- Elegoo (all OrcaSlicer-supported FDM models) -------------------------
+    # Same approach as the Anycubic block: inherit the OrcaSlicer system
+    # presets (machine preset carries the default gcode; process preset is the
+    # per-nozzle Standard). Enclosed CoreXY (Centauri family) mirror the X1C;
+    # open-frame bedslingers (Neptune family, OrangeStorm Giga) mirror the A1.
+    # Process presets use Elegoo's short model codes (C/CC/N4Pro/...); the
+    # older Neptunes (2/2D/2S/3/X) share the common 'Neptune' process preset.
+    "Centauri": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @Elegoo C 0.2 nozzle", ""),
+            0.4: ("0.20mm Standard @Elegoo C 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo C 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo C 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.2: "Brian Centauri 0.2",
+            0.4: "Brian Centauri 0.4",
+            0.6: "Brian Centauri 0.6",
+            0.8: "Brian Centauri 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Elegoo Centauri 0.2 nozzle", ""),
+            0.4: ("Elegoo Centauri 0.4 nozzle", ""),
+            0.6: ("Elegoo Centauri 0.6 nozzle", ""),
+            0.8: ("Elegoo Centauri 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "CentauriCarbon": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @Elegoo CC 0.2 nozzle", ""),
+            0.4: ("0.20mm Standard @Elegoo CC 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo CC 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo CC 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.2: "Brian Centauri Carbon 0.2",
+            0.4: "Brian Centauri Carbon 0.4",
+            0.6: "Brian Centauri Carbon 0.6",
+            0.8: "Brian Centauri Carbon 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Elegoo Centauri Carbon 0.2 nozzle", ""),
+            0.4: ("Elegoo Centauri Carbon 0.4 nozzle", ""),
+            0.6: ("Elegoo Centauri Carbon 0.6 nozzle", ""),
+            0.8: ("Elegoo Centauri Carbon 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "CentauriCarbon2": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @Elegoo CC2 0.2 nozzle", ""),
+            0.4: ("0.20mm Standard @Elegoo CC2 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo CC2 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo CC2 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.2: "Brian Centauri Carbon 2 0.2",
+            0.4: "Brian Centauri Carbon 2 0.4",
+            0.6: "Brian Centauri Carbon 2 0.6",
+            0.8: "Brian Centauri Carbon 2 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Elegoo Centauri Carbon 2 0.2 nozzle", ""),
+            0.4: ("Elegoo Centauri Carbon 2 0.4 nozzle", ""),
+            0.6: ("Elegoo Centauri Carbon 2 0.6 nozzle", ""),
+            0.8: ("Elegoo Centauri Carbon 2 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune": {
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Elegoo Neptune 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo Neptune 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo Neptune 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Neptune 0.4",
+            0.6: "Brian Neptune 0.6",
+            0.8: "Brian Neptune 0.8",
+        },
+        "machine_base_profiles": {
+            0.4: ("Elegoo Neptune 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune2": {
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Elegoo Neptune 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo Neptune 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo Neptune 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Neptune 2 0.4",
+            0.6: "Brian Neptune 2 0.6",
+            0.8: "Brian Neptune 2 0.8",
+        },
+        "machine_base_profiles": {
+            0.4: ("Elegoo Neptune 2 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 2 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 2 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune2D": {
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Elegoo Neptune 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo Neptune 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo Neptune 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Neptune 2D 0.4",
+            0.6: "Brian Neptune 2D 0.6",
+            0.8: "Brian Neptune 2D 0.8",
+        },
+        "machine_base_profiles": {
+            0.4: ("Elegoo Neptune 2D 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 2D 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 2D 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune2S": {
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Elegoo Neptune 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo Neptune 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo Neptune 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Neptune 2S 0.4",
+            0.6: "Brian Neptune 2S 0.6",
+            0.8: "Brian Neptune 2S 0.8",
+        },
+        "machine_base_profiles": {
+            0.4: ("Elegoo Neptune 2S 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 2S 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 2S 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune3": {
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Elegoo Neptune 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo Neptune 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo Neptune 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Neptune 3 0.4",
+            0.6: "Brian Neptune 3 0.6",
+            0.8: "Brian Neptune 3 0.8",
+        },
+        "machine_base_profiles": {
+            0.4: ("Elegoo Neptune 3 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 3 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 3 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune3Max": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @Elegoo N3Max 0.2 nozzle", ""),
+            0.4: ("0.20mm Standard @Elegoo N3Max 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo N3Max 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo N3Max 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.2: "Brian Neptune 3 Max 0.2",
+            0.4: "Brian Neptune 3 Max 0.4",
+            0.6: "Brian Neptune 3 Max 0.6",
+            0.8: "Brian Neptune 3 Max 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Elegoo Neptune 3 Max 0.2 nozzle", ""),
+            0.4: ("Elegoo Neptune 3 Max 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 3 Max 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 3 Max 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune3Plus": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @Elegoo N3Plus 0.2 nozzle", ""),
+            0.4: ("0.20mm Standard @Elegoo N3Plus 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo N3Plus 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo N3Plus 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.2: "Brian Neptune 3 Plus 0.2",
+            0.4: "Brian Neptune 3 Plus 0.4",
+            0.6: "Brian Neptune 3 Plus 0.6",
+            0.8: "Brian Neptune 3 Plus 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Elegoo Neptune 3 Plus 0.2 nozzle", ""),
+            0.4: ("Elegoo Neptune 3 Plus 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 3 Plus 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 3 Plus 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune3Pro": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @Elegoo N3Pro 0.2 nozzle", ""),
+            0.4: ("0.20mm Standard @Elegoo N3Pro 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo N3Pro 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo N3Pro 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.2: "Brian Neptune 3 Pro 0.2",
+            0.4: "Brian Neptune 3 Pro 0.4",
+            0.6: "Brian Neptune 3 Pro 0.6",
+            0.8: "Brian Neptune 3 Pro 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Elegoo Neptune 3 Pro 0.2 nozzle", ""),
+            0.4: ("Elegoo Neptune 3 Pro 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 3 Pro 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 3 Pro 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune4": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @Elegoo N4 0.2 nozzle", ""),
+            0.4: ("0.20mm Standard @Elegoo N4 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo N4 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo N4 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.2: "Brian Neptune 4 0.2",
+            0.4: "Brian Neptune 4 0.4",
+            0.6: "Brian Neptune 4 0.6",
+            0.8: "Brian Neptune 4 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Elegoo Neptune 4 0.2 nozzle", ""),
+            0.4: ("Elegoo Neptune 4 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 4 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 4 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune4Max": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @Elegoo N4Max 0.2 nozzle", ""),
+            0.4: ("0.20mm Standard @Elegoo N4Max 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo N4Max 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo N4Max 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.2: "Brian Neptune 4 Max 0.2",
+            0.4: "Brian Neptune 4 Max 0.4",
+            0.6: "Brian Neptune 4 Max 0.6",
+            0.8: "Brian Neptune 4 Max 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Elegoo Neptune 4 Max 0.2 nozzle", ""),
+            0.4: ("Elegoo Neptune 4 Max 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 4 Max 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 4 Max 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune4Plus": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @Elegoo N4Plus 0.2 nozzle", ""),
+            0.4: ("0.20mm Standard @Elegoo N4Plus 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo N4Plus 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo N4Plus 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.2: "Brian Neptune 4 Plus 0.2",
+            0.4: "Brian Neptune 4 Plus 0.4",
+            0.6: "Brian Neptune 4 Plus 0.6",
+            0.8: "Brian Neptune 4 Plus 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Elegoo Neptune 4 Plus 0.2 nozzle", ""),
+            0.4: ("Elegoo Neptune 4 Plus 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 4 Plus 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 4 Plus 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Neptune4Pro": {
+        "nozzle_base_profiles": {
+            0.2: ("0.10mm Standard @Elegoo N4Pro 0.2 nozzle", ""),
+            0.4: ("0.20mm Standard @Elegoo N4Pro 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo N4Pro 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo N4Pro 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.2: "Brian Neptune 4 Pro 0.2",
+            0.4: "Brian Neptune 4 Pro 0.4",
+            0.6: "Brian Neptune 4 Pro 0.6",
+            0.8: "Brian Neptune 4 Pro 0.8",
+        },
+        "machine_base_profiles": {
+            0.2: ("Elegoo Neptune 4 Pro 0.2 nozzle", ""),
+            0.4: ("Elegoo Neptune 4 Pro 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune 4 Pro 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune 4 Pro 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "NeptuneX": {
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Elegoo Neptune 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo Neptune 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo Neptune 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Neptune X 0.4",
+            0.6: "Brian Neptune X 0.6",
+            0.8: "Brian Neptune X 0.8",
+        },
+        "machine_base_profiles": {
+            0.4: ("Elegoo Neptune X 0.4 nozzle", ""),
+            0.6: ("Elegoo Neptune X 0.6 nozzle", ""),
+            0.8: ("Elegoo Neptune X 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "OrangeStormGiga": {
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Elegoo Giga 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Elegoo Giga 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Elegoo Giga 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian OrangeStorm Giga 0.4",
+            0.6: "Brian OrangeStorm Giga 0.6",
+            0.8: "Brian OrangeStorm Giga 0.8",
+        },
+        "machine_base_profiles": {
+            0.4: ("Elegoo OrangeStorm Giga 0.4 nozzle", ""),
+            0.6: ("Elegoo OrangeStorm Giga 0.6 nozzle", ""),
+            0.8: ("Elegoo OrangeStorm Giga 0.8 nozzle", ""),
         },
         "machine_extras": {},
         "gcode_file": None,
