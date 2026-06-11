@@ -3020,11 +3020,11 @@ def generate_filament_profiles(dry_run: bool = False):
             # Plate temps for PLA-based filaments depend on enclosure. A single
             # value is applied across ALL plate types (including the cool plate):
             #   Enclosed printers: 47°C (enclosure traps heat, less needed)
-            #   Open-air printers: 55°C (needs more heat to compensate for ambient loss)
+            #   Open-air printers: 50°C (A1-class / bedslingers)
             fil_type = profile.get("filament_type", [""])[0]
             if fil_type in ("PLA", "PVA"):
                 is_enclosed = PRINTER_ENCLOSED.get(printer_key, False)
-                plate_temp = "47" if is_enclosed else "55"
+                plate_temp = "47" if is_enclosed else "50"
                 for plate_key in PEI_PLATE_KEYS + ["cool_plate_temp",
                                                    "cool_plate_temp_initial_layer"]:
                     profile[plate_key] = [plate_temp]
