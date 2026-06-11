@@ -76,6 +76,14 @@ ENABLED_PRINTERS = {
     "P1P": False,    # Bambu Lab P1P (open-frame CoreXY, no enclosure)
     "A1":  False,    # Bambu Lab A1 (i3 gantry, 256mm bed)
     "A1M": False,    # Bambu Lab A1 Mini (i3 gantry, 180mm bed)
+    # Anycubic (Kobra 3 and newer). Enclosed models mirror the X1C profile;
+    # open-frame models mirror the A1. They inherit each printer's default
+    # OrcaSlicer start/end gcode (no custom Brian gcode).
+    "Kobra3":    False,  # Anycubic Kobra 3 (open-frame bedslinger -> mirrors A1)
+    "Kobra3Max": False,  # Anycubic Kobra 3 Max (open-frame bedslinger -> mirrors A1)
+    "KobraS1":   False,  # Anycubic Kobra S1 (enclosed CoreXY -> mirrors X1C)
+    "KobraS1Max":False,  # Anycubic Kobra S1 Max (enclosed CoreXY -> mirrors X1C)
+    "KobraX":    False,  # Anycubic Kobra X (open-frame bedslinger -> mirrors A1)
 }
 
 # =============================================================================
@@ -188,6 +196,27 @@ if _CONFIG_FILE.exists():
 # - A1M plate temps for PLA: 57°C across all plates (X1C: 48°C, enclosure traps heat)
 # - Both printers: z-offset gcode (-0.04 textured PEI, -0.02 everything else)
 # - Both printers: custom gcode bundled as JSON files (single source of truth)
+#
+# NON-BAMBU PRINTERS: ANYCUBIC (Kobra 3 and newer)
+# ------------------------------------------------
+# Anycubic Kobra 3, Kobra 3 Max, Kobra S1, Kobra S1 Max, and Kobra X are
+# supported by mirroring their nearest Bambu equivalent. There is nothing
+# Anycubic-specific in the speed/temp/accel logic - each Anycubic printer simply
+# joins the corexy or i3 group and reuses that group's profiles wholesale:
+#
+# - Enclosed CoreXY models (Kobra S1, S1 Max) -> "corexy" group, mirror the X1C
+#   (including the X1C chamber PETG 65/65 bed rule, via PRINTER_MIRRORS).
+# - Open-frame bedslingers (Kobra 3, 3 Max, X) -> "i3" group, mirror the A1.
+# - Machine profiles inherit the matching OrcaSlicer system machine preset, which
+#   carries each printer's DEFAULT start/end gcode - so gcode_file is None and no
+#   custom Brian gcode is applied. Process profiles inherit the per-nozzle
+#   Anycubic "Standard" preset. Requires the Anycubic profiles bundled with
+#   current OrcaSlicer.
+# - Nozzle sizes are per-printer (only those with a canonical Anycubic "Standard"
+#   process preset the generator can scale). Kobra 3's 0.2 and S1 Max's 0.25 have
+#   no such preset and are omitted; machine/filament loops skip absent nozzles.
+# - base_id in the .info files is left empty: upstream Anycubic presets carry
+#   copy-pasted/missing setting_ids, and inheritance resolves by name regardless.
 #
 # MATERIAL MODES
 # --------------
@@ -545,8 +574,8 @@ ORCA_PROFILE_VERSION = "1.10.0.35"
 # =============================================================================
 
 # Printer group: determines which settings philosophy to use.
-# "corexy" = CoreXY frame (X1C, X1, X1E, P1S, P1P) - uses corexy speed/accel/infill
-# "i3"     = cantilevered gantry (A1, A1M) - uses i3 caps and crosshatch infill
+# "corexy" = CoreXY frame (X1C, X1, X1E, P1S, P1P, enclosed Anycubic) - corexy speed/accel/infill
+# "i3"     = cantilevered/bedslinger gantry (A1, A1M, open Anycubic) - i3 caps and crosshatch infill
 PRINTER_GROUP = {
     "X1C": "corexy",
     "X1":  "corexy",
@@ -555,6 +584,12 @@ PRINTER_GROUP = {
     "P1P": "corexy",
     "A1":  "i3",
     "A1M": "i3",
+    # Anycubic: enclosed -> corexy (mirror X1C), open-frame -> i3 (mirror A1)
+    "Kobra3":    "i3",
+    "Kobra3Max": "i3",
+    "KobraS1":   "corexy",
+    "KobraS1Max":"corexy",
+    "KobraX":    "i3",
 }
 
 # Whether the printer has an enclosure (affects ABS/ASA availability)
@@ -566,6 +601,24 @@ PRINTER_ENCLOSED = {
     "P1P": False,   # Open frame - no enclosure
     "A1":  False,
     "A1M": False,
+    "Kobra3":    False,
+    "Kobra3Max": False,
+    "KobraS1":   True,    # enclosed CoreXY
+    "KobraS1Max":True,    # enclosed CoreXY
+    "KobraX":    False,
+}
+
+# Mirror target: which Bambu printer's per-printer (key-specific) tweaks a
+# printer should inherit. Group-based behaviour already flows from
+# PRINTER_GROUP; this only covers the handful of branches keyed on a specific
+# printer (e.g. the X1C chamber PETG bed-temp rule). Bambu printers map to
+# themselves implicitly; only the Anycubic additions need an explicit mirror.
+PRINTER_MIRRORS = {
+    "Kobra3":    "A1",
+    "Kobra3Max": "A1",
+    "KobraS1":   "X1C",
+    "KobraS1Max":"X1C",
+    "KobraX":    "A1",
 }
 
 # Profile name suffix per printer (X1C is default, no suffix)
@@ -577,6 +630,11 @@ PRINTER_SUFFIX = {
     "P1P": " P1P",
     "A1":  " A1",
     "A1M": " A1M",
+    "Kobra3":    " Kobra 3",
+    "Kobra3Max": " Kobra 3 Max",
+    "KobraS1":   " Kobra S1",
+    "KobraS1Max":" Kobra S1 Max",
+    "KobraX":    " Kobra X",
 }
 
 # Filament profile suffix per printer (used in filament naming)
@@ -590,6 +648,11 @@ FILAMENT_PRINTER_SUFFIX = {
     "P1P": " P1P",
     "A1":  " A1",
     "A1M": " A1M",
+    "Kobra3":    " Kobra 3",
+    "Kobra3Max": " Kobra 3 Max",
+    "KobraS1":   " Kobra S1",
+    "KobraS1Max":" Kobra S1 Max",
+    "KobraX":    " Kobra X",
 }
 
 ALL_PRINTERS = {
@@ -752,6 +815,100 @@ ALL_PRINTERS = {
         },
         "machine_extras": {},
         "gcode_file": "brian_a1m_gcode.json",
+    },
+
+    # --- Anycubic (Kobra 3 and newer) ---------------------------------------
+    # These inherit from OrcaSlicer's built-in Anycubic system profiles. Process
+    # profiles inherit the per-nozzle "Standard" preset; machine profiles inherit
+    # the matching system machine preset (which carries the printer's default
+    # start/end gcode), so gcode_file is None. base_id is left empty: the
+    # upstream Anycubic presets carry copy-pasted/missing setting_ids, and the
+    # functional link is the inherits-by-name, which is exact here.
+    # Only nozzle sizes with a canonical "Standard" process preset that the
+    # generator can scale are included (0.2 on Kobra 3 and 0.25 on S1 Max have
+    # no such preset and are omitted).
+    "Kobra3": {     # open-frame bedslinger -> mirrors A1 (i3)
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Anycubic Kobra 3 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Anycubic Kobra 3 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Anycubic Kobra 3 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Kobra 3 0.4",
+            0.6: "Brian Kobra 3 0.6",
+            0.8: "Brian Kobra 3 0.8",
+        },
+        "machine_base_profiles": {
+            0.4: ("Anycubic Kobra 3 0.4 nozzle", ""),
+            0.6: ("Anycubic Kobra 3 0.6 nozzle", ""),
+            0.8: ("Anycubic Kobra 3 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "Kobra3Max": {  # open-frame bedslinger -> mirrors A1 (i3)
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Anycubic Kobra 3 Max 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Anycubic Kobra 3 Max 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Anycubic Kobra 3 Max 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Kobra 3 Max 0.4",
+            0.6: "Brian Kobra 3 Max 0.6",
+            0.8: "Brian Kobra 3 Max 0.8",
+        },
+        "machine_base_profiles": {
+            0.4: ("Anycubic Kobra 3 Max 0.4 nozzle", ""),
+            0.6: ("Anycubic Kobra 3 Max 0.6 nozzle", ""),
+            0.8: ("Anycubic Kobra 3 Max 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "KobraS1": {    # enclosed CoreXY -> mirrors X1C (corexy)
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Anycubic Kobra S1 0.4 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Kobra S1 0.4",
+        },
+        "machine_base_profiles": {
+            0.4: ("Anycubic Kobra S1 0.4 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "KobraS1Max": { # enclosed CoreXY -> mirrors X1C (corexy)
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Anycubic Kobra S1 Max 0.4 nozzle", ""),
+            0.6: ("0.30mm Standard @Anycubic Kobra S1 Max 0.6 nozzle", ""),
+            0.8: ("0.40mm Standard @Anycubic Kobra S1 Max 0.8 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Kobra S1 Max 0.4",
+            0.6: "Brian Kobra S1 Max 0.6",
+            0.8: "Brian Kobra S1 Max 0.8",
+        },
+        "machine_base_profiles": {
+            0.4: ("Anycubic Kobra S1 Max 0.4 nozzle", ""),
+            0.6: ("Anycubic Kobra S1 Max 0.6 nozzle", ""),
+            0.8: ("Anycubic Kobra S1 Max 0.8 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
+    },
+    "KobraX": {     # open-frame bedslinger -> mirrors A1 (i3)
+        "nozzle_base_profiles": {
+            0.4: ("0.20mm Standard @Anycubic Kobra X 0.4 nozzle", ""),
+        },
+        "machine_profile_names": {
+            0.4: "Brian Kobra X 0.4",
+        },
+        "machine_base_profiles": {
+            0.4: ("Anycubic Kobra X 0.4 nozzle", ""),
+        },
+        "machine_extras": {},
+        "gcode_file": None,
     },
 }
 
@@ -2307,10 +2464,12 @@ def generate_filament_profiles(dry_run: bool = False):
             profile["is_custom_defined"] = "0"
             profile["version"] = ORCA_PROFILE_VERSION
 
-            # Set compatible_printers to all nozzle variants for this printer
+            # Set compatible_printers to all nozzle variants this printer has
+            # (a printer only defines the nozzle sizes it actually supports).
             compat = [
                 printer_cfg["machine_base_profiles"][nozzle][0]
                 for nozzle in NOZZLE_SIZES
+                if nozzle in printer_cfg["machine_base_profiles"]
             ]
             profile["compatible_printers"] = compat
 
@@ -2353,7 +2512,8 @@ def generate_filament_profiles(dry_run: bool = False):
 
             # X1C PETG: hold bed at 65 for both first and subsequent layers
             # (the chamber retains heat well, so no need to drop after layer 1).
-            if printer_key == "X1C":
+            # Enclosed Anycubic printers mirror the X1C, so they get this too.
+            if printer_key == "X1C" or PRINTER_MIRRORS.get(printer_key) == "X1C":
                 fil_type = profile.get("filament_type", [""])[0]
                 if fil_type == "PETG":
                     profile["cool_plate_temp"] = ["65"]
@@ -2401,16 +2561,21 @@ def generate_machine_profiles(dry_run: bool = False):
     """Generate machine profiles for all printer/nozzle combinations."""
     count = 0
 
-    # Load all gcode files for enabled printers
+    # Load all gcode files for enabled printers. gcode_file is optional: a
+    # printer with gcode_file=None (e.g. Anycubic) inherits its default
+    # start/end gcode from the system machine preset it inherits from.
     gcode_cache = {}
     for printer_key, printer_cfg in PRINTERS.items():
-        gcode_filename = printer_cfg["gcode_file"]
-        if gcode_filename not in gcode_cache:
+        gcode_filename = printer_cfg.get("gcode_file")
+        if gcode_filename and gcode_filename not in gcode_cache:
             gcode_path = _bundle_root() / gcode_filename
             gcode_cache[gcode_filename] = _load_gcode_file(gcode_path)
 
     for printer_key, printer_cfg in PRINTERS.items():
+        # A printer only defines the nozzle sizes it actually supports.
         for nozzle in NOZZLE_SIZES:
+            if nozzle not in printer_cfg["machine_profile_names"]:
+                continue
             machine_name = printer_cfg["machine_profile_names"][nozzle]
             base_name, base_id = printer_cfg["machine_base_profiles"][nozzle]
 
@@ -2424,8 +2589,8 @@ def generate_machine_profiles(dry_run: bool = False):
                 "version": ORCA_PROFILE_VERSION,
             }
 
-            # Apply custom gcode from bundled file
-            gcode = gcode_cache.get(printer_cfg["gcode_file"], {})
+            # Apply custom gcode from bundled file (if this printer has one)
+            gcode = gcode_cache.get(printer_cfg.get("gcode_file"), {})
             if gcode:
                 profile.update(gcode)
 

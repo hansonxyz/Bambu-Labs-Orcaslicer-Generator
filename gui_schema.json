@@ -9,18 +9,23 @@
         {
             "id": "printers",
             "title": "Printers",
-            "help": "Enable the printer(s) you own. Profiles are generated for every enabled printer across all four nozzle sizes (0.2 / 0.4 / 0.6 / 0.8 mm).",
+            "help": "Enable the printer(s) you own. Profiles are generated for every enabled printer across its available nozzle sizes. Anycubic models inherit each printer's default OrcaSlicer start/end gcode but otherwise mirror their Bambu counterpart: enclosed models mirror the X1C, open-frame models mirror the A1.",
             "type": "toggles",
             "config_key": "ENABLED_PRINTERS",
             "columns": 2,
             "options": [
-                {"key": "X1C", "label": "X1 Carbon", "help": "Enclosed CoreXY, hardened nozzle, lidar", "default": true},
-                {"key": "X1",  "label": "X1",        "help": "Enclosed CoreXY, stainless nozzle, lidar", "default": false},
-                {"key": "X1E", "label": "X1E",       "help": "Enclosed CoreXY, enterprise, air filtration", "default": false},
-                {"key": "P1S", "label": "P1S",       "help": "Enclosed CoreXY, no lidar", "default": false},
-                {"key": "P1P", "label": "P1P",       "help": "Open-frame CoreXY, no enclosure", "default": false},
-                {"key": "A1",  "label": "A1",        "help": "i3 gantry, 256mm bed", "default": false},
-                {"key": "A1M", "label": "A1 Mini",   "help": "i3 gantry, 180mm bed", "default": false}
+                {"key": "X1C", "label": "Bambu X1 Carbon", "help": "Enclosed CoreXY, hardened nozzle, lidar", "default": true},
+                {"key": "X1",  "label": "Bambu X1",        "help": "Enclosed CoreXY, stainless nozzle, lidar", "default": false},
+                {"key": "X1E", "label": "Bambu X1E",       "help": "Enclosed CoreXY, enterprise, air filtration", "default": false},
+                {"key": "P1S", "label": "Bambu P1S",       "help": "Enclosed CoreXY, no lidar", "default": false},
+                {"key": "P1P", "label": "Bambu P1P",       "help": "Open-frame CoreXY, no enclosure", "default": false},
+                {"key": "A1",  "label": "Bambu A1",        "help": "i3 gantry, 256mm bed", "default": false},
+                {"key": "A1M", "label": "Bambu A1 Mini",   "help": "i3 gantry, 180mm bed", "default": false},
+                {"key": "Kobra3",     "label": "Anycubic Kobra 3",     "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.4/0.6/0.8)", "default": false},
+                {"key": "Kobra3Max",  "label": "Anycubic Kobra 3 Max", "help": "Open-frame bedslinger - mirrors A1 (nozzles 0.4/0.6/0.8)", "default": false},
+                {"key": "KobraS1",    "label": "Anycubic Kobra S1",    "help": "Enclosed CoreXY - mirrors X1C (nozzle 0.4)", "default": false},
+                {"key": "KobraS1Max", "label": "Anycubic Kobra S1 Max","help": "Enclosed CoreXY - mirrors X1C (nozzles 0.4/0.6/0.8)", "default": false},
+                {"key": "KobraX",     "label": "Anycubic Kobra X",     "help": "Open-frame bedslinger - mirrors A1 (nozzle 0.4)", "default": false}
             ]
         },
         {

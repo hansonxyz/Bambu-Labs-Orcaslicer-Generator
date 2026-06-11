@@ -17,19 +17,31 @@ All profiles inherit from Bambu Lab's system baselines and only store overrides,
 
 ## Supported Printers
 
-All current Bambu Lab printers are supported. Enable the ones you own:
+All current Bambu Lab printers are supported, plus Anycubic Kobra 3 and newer.
+Enable the ones you own:
 
-| Printer | Type | Enclosure |
-|---------|------|-----------|
-| X1 Carbon | CoreXY | Yes |
-| X1 | CoreXY | Yes |
-| X1E | CoreXY | Yes |
-| P1S | CoreXY | Yes |
-| P1P | CoreXY | No |
-| A1 | i3 gantry | No |
-| A1 Mini | i3 gantry | No |
+| Printer | Type | Enclosure | Nozzles |
+|---------|------|-----------|---------|
+| Bambu X1 Carbon | CoreXY | Yes | 0.2 / 0.4 / 0.6 / 0.8 |
+| Bambu X1 | CoreXY | Yes | 0.2 / 0.4 / 0.6 / 0.8 |
+| Bambu X1E | CoreXY | Yes | 0.2 / 0.4 / 0.6 / 0.8 |
+| Bambu P1S | CoreXY | Yes | 0.2 / 0.4 / 0.6 / 0.8 |
+| Bambu P1P | CoreXY | No | 0.2 / 0.4 / 0.6 / 0.8 |
+| Bambu A1 | i3 gantry | No | 0.2 / 0.4 / 0.6 / 0.8 |
+| Bambu A1 Mini | i3 gantry | No | 0.2 / 0.4 / 0.6 / 0.8 |
+| Anycubic Kobra 3 | bedslinger | No | 0.4 / 0.6 / 0.8 |
+| Anycubic Kobra 3 Max | bedslinger | No | 0.4 / 0.6 / 0.8 |
+| Anycubic Kobra S1 | CoreXY | Yes | 0.4 |
+| Anycubic Kobra S1 Max | CoreXY | Yes | 0.4 / 0.6 / 0.8 |
+| Anycubic Kobra X | bedslinger | No | 0.4 |
 
-Each printer supports 0.2mm, 0.4mm, 0.6mm, and 0.8mm nozzle sizes.
+The Anycubic profiles inherit each printer's **default OrcaSlicer start/end
+gcode**, but every speed, temperature, and acceleration setting mirrors the
+equivalent Bambu profile: enclosed models (Kobra S1 / S1 Max) mirror the X1C,
+open-frame models (Kobra 3 / 3 Max / X) mirror the A1. Anycubic support requires
+the built-in Anycubic profiles that ship with current OrcaSlicer. Nozzle sizes
+without a matching Anycubic "Standard" preset (Kobra 3's 0.2, S1 Max's 0.25) are
+omitted.
 
 ## Material Modes
 
