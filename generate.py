@@ -1943,8 +1943,8 @@ FILAMENT_B_PLA = {
     "filament_z_hop": ["0.15"],
     "filament_z_hop_types": ["Spiral Lift"],
     # Temps
-    "nozzle_temperature": ["215"],
-    "nozzle_temperature_initial_layer": ["215"],
+    "nozzle_temperature": ["222"],
+    "nozzle_temperature_initial_layer": ["222"],
     "nozzle_temperature_range_high": ["250"],
     "nozzle_temperature_range_low": ["190"],
     "cool_plate_temp": ["40"],
