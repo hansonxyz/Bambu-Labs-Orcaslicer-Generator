@@ -1481,15 +1481,15 @@ UNIVERSAL_OVERRIDES = {
     "support_top_z_distance": "0.15",
     "support_object_first_layer_gap": "0.5",
     "support_filament": "1056",
-    "support_speed": "90",
+    "support_speed": "25",
     # Tree support defaults
     "tree_support_branch_angle_organic": "60",
     "tree_support_branch_diameter_angle": "8",
     "support_object_xy_distance": "0.25",
 
     # Raft
-    "raft_first_layer_density": "25%",
-    "raft_first_layer_expansion": "1",
+    "raft_first_layer_density": "35%",
+    "raft_first_layer_expansion": "5",
 
     # Prime tower (for multi-material, configured as sensible defaults)
     "enable_prime_tower": "1",
@@ -1563,7 +1563,7 @@ PLA_FAST = {
     "internal_solid_infill_speed": "225",  # 90% of BBL 250
     "gap_infill_speed": "200",       # 80% of BBL 250
     "top_surface_speed": "170",      # 85% of BBL 200 - visible
-    "support_speed": "150",          # match stock
+    "support_speed": "25",
     "travel_speed": "400",           # 80% of BBL 500
     # Acceleration - match or stay below stock, never exceed
     "outer_wall_acceleration": "5000",   # match stock
@@ -1593,7 +1593,7 @@ PETG_ABS = {
     "internal_solid_infill_speed": "45",
     "gap_infill_speed": "45",
     "top_surface_speed": "45",
-    "support_speed": "45",
+    "support_speed": "25",
     "support_interface_speed": "45",
     "travel_speed": "200",
     "slow_down_layers": "2",
@@ -1664,7 +1664,7 @@ PLA_DRAFT = {
     "internal_solid_infill_speed": "225",  # 90% of BBL 250
     "gap_infill_speed": "225",       # 90% of BBL 250
     "top_surface_speed": "180",      # 90% of BBL 200
-    "support_speed": "135",          # 90% of BBL 150
+    "support_speed": "25",
     "support_interface_speed": "75",
     "travel_speed": "450",           # 90% of BBL 500
     # Acceleration - push it for draft speed
@@ -1702,7 +1702,7 @@ PLA_DELICATE = {
     "internal_solid_infill_speed": "45",
     "gap_infill_speed": "45",
     "top_surface_speed": "45",
-    "support_speed": "40",
+    "support_speed": "25",
     "support_interface_speed": "45",
     "travel_speed": "100",
     # Ultra-low acceleration everywhere
@@ -1735,7 +1735,7 @@ PLA_MM = {
     "internal_solid_infill_speed": "75",
     "gap_infill_speed": "55",
     "top_surface_speed": "55",
-    "support_speed": "75",
+    "support_speed": "25",
     "support_interface_speed": "40",
     "travel_speed": "175",
     # Capped acceleration for MM reliability
@@ -1759,8 +1759,8 @@ PLA_MM = {
     "support_interface_pattern": "rectilinear_interlaced",
     "support_threshold_angle": "35",
     # Raft
-    "raft_first_layer_density": "50%",
-    "raft_first_layer_expansion": "1.5",
+    "raft_first_layer_density": "35%",
+    "raft_first_layer_expansion": "5",
     "initial_layer_line_width": "105%",
 }
 
@@ -1775,7 +1775,7 @@ PLA_PETG_PVA_MM = {
     "internal_solid_infill_speed": "55",
     "gap_infill_speed": "35",
     "top_surface_speed": "40",
-    "support_speed": "80",
+    "support_speed": "25",
     "support_interface_speed": "22",
     "travel_speed": "175",
     # All acceleration capped at 2500
@@ -1805,8 +1805,8 @@ PLA_PETG_PVA_MM = {
     "support_threshold_angle": "35",
     # Shells
     # Raft
-    "raft_first_layer_density": "25%",
-    "raft_first_layer_expansion": "1.5",
+    "raft_first_layer_density": "35%",
+    "raft_first_layer_expansion": "5",
     "initial_layer_line_width": "105%",
 }
 
@@ -1824,7 +1824,7 @@ TPU = {
     "internal_solid_infill_speed": "35",
     "gap_infill_speed": "30",
     "top_surface_speed": "30",
-    "support_speed": "30",
+    "support_speed": "25",
     "support_interface_speed": "25",
     "travel_speed": "120",
     # Very gentle acceleration - TPU is flexible and bounces with fast moves
