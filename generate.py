@@ -2247,12 +2247,16 @@ FILAMENT_B_PLA_SILK_OVERRIDES = {
 }
 
 FILAMENT_B_PLA_WOOD_OVERRIDES = {
+    # Values dialed in and validated on the A1M, applied to all printers.
+    # Plate temps are intentionally NOT set here - they follow the global PLA
+    # plate-temp rule (47C enclosed / 55C open) below.
     "filament_cost": ["30"],
-    "filament_max_volumetric_speed": ["2"],  # wood particles restrict flow, higher = clog risk
-    "filament_retraction_length": ["0.5"],
-    "filament_z_hop": ["0.15"],
+    "filament_max_volumetric_speed": ["5"],   # tuned up from 2 on the A1M
+    "filament_retraction_length": ["0.8"],     # tuned on A1M; exempt from the i3 +0.1 bump
+    "filament_z_hop": ["0.1"],
     "filament_z_hop_types": ["Auto Lift"],
-    "nozzle_temperature_initial_layer": ["210"],  # high temp chars wood particles and clogs
+    "nozzle_temperature": ["230"],             # run hot; was inheriting 215
+    "nozzle_temperature_initial_layer": ["230"],
 }
 
 # Child filament: overrides on top of B PLA for carbon fiber PLA
@@ -2961,8 +2965,12 @@ def generate_filament_profiles(dry_run: bool = False):
             ]
             profile["compatible_printers"] = compat
 
-            # i3 printers: slightly more retraction for the gantry arm
-            if group == "i3" and "filament_retraction_length" in profile:
+            # i3 printers: slightly more retraction for the gantry arm.
+            # PLA Wood is exempt: its retraction was hand-tuned on the A1M, so the
+            # gantry compensation is already baked into that value - bumping again
+            # would double-count it.
+            if (group == "i3" and filament_name != "B PLA Wood"
+                    and "filament_retraction_length" in profile):
                 try:
                     base_ret = float(profile["filament_retraction_length"][0])
                     profile["filament_retraction_length"] = [f"{base_ret + 0.1:.2f}"]
@@ -3009,16 +3017,16 @@ def generate_filament_profiles(dry_run: bool = False):
                     for plate_key in PEI_PLATE_KEYS:
                         profile[plate_key] = ["65"]
 
-            # Plate temps for PLA-based filaments depend on enclosure.
-            # Only override PEI/SuperTack plates - cool plate stays at 35°C always
-            # (it's a low-temp coating, PLA softens above 55°C on this surface).
-            # Enclosed printers: 48°C (enclosure traps heat, less needed)
-            # Open-air printers: 57°C (needs more heat to compensate for ambient loss)
+            # Plate temps for PLA-based filaments depend on enclosure. A single
+            # value is applied across ALL plate types (including the cool plate):
+            #   Enclosed printers: 47°C (enclosure traps heat, less needed)
+            #   Open-air printers: 55°C (needs more heat to compensate for ambient loss)
             fil_type = profile.get("filament_type", [""])[0]
             if fil_type in ("PLA", "PVA"):
                 is_enclosed = PRINTER_ENCLOSED.get(printer_key, False)
-                plate_temp = "48" if is_enclosed else "57"
-                for plate_key in PEI_PLATE_KEYS:
+                plate_temp = "47" if is_enclosed else "55"
+                for plate_key in PEI_PLATE_KEYS + ["cool_plate_temp",
+                                                   "cool_plate_temp_initial_layer"]:
                     profile[plate_key] = [plate_temp]
 
             if dry_run:
