@@ -1,0 +1,67 @@
+name: Build distributables
+
+# Builds the GUI as a one-file app on Windows, macOS, and Linux, plus a
+# Windows installer. Runs on tags (v*) and can be triggered manually.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: OrcaConfGen-windows
+          - os: macos-latest
+            artifact: OrcaConfGen-macos
+          - os: ubuntu-latest
+            artifact: OrcaConfGen-linux
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build app (PyInstaller)
+        run: pyinstaller --noconfirm OrcaConfGen.spec
+
+      - name: Derive version
+        id: ver
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Windows installer (Inno Setup)
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install innosetup --no-progress -y
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DMyAppVersion=${{ steps.ver.outputs.version || '0.0.0' }} installer.iss
+        shell: pwsh
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            dist/OrcaConfGen
+            dist/OrcaConfGen.exe
+            dist/OrcaConfGen.app
+          if-no-files-found: ignore
+
+      - name: Upload Windows installer
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: OrcaConfGen-windows-installer
+          path: Output/*.exe
+          if-no-files-found: ignore

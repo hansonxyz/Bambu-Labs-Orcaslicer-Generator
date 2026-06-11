@@ -4,3 +4,9 @@ backups/
 CLAUDE.md
 config.json
 reference/
+
+# Build artifacts (PyInstaller + Inno Setup)
+build/
+dist/
+Output/
+*.whl

@@ -1,0 +1,85 @@
+{
+    "_comment": "Declarative UI definition for the OrcaSlicer Profile Generator GUI. The GUI (gui.py) renders itself entirely from this file - it contains NO hard-coded printers, filaments, or options. To expose a new printer, filament, or option, add an entry here; no Python changes are needed. Current values are persisted separately in config.json; the 'default' fields below are only used on first run when no saved value exists.",
+    "app": {
+        "title": "OrcaSlicer Profile Generator",
+        "subtitle": "Algorithmic process / machine / filament profiles for Bambu Lab printers",
+        "version": "1.0.0"
+    },
+    "groups": [
+        {
+            "id": "printers",
+            "title": "Printers",
+            "help": "Enable the printer(s) you own. Profiles are generated for every enabled printer across all four nozzle sizes (0.2 / 0.4 / 0.6 / 0.8 mm).",
+            "type": "toggles",
+            "config_key": "ENABLED_PRINTERS",
+            "columns": 2,
+            "options": [
+                {"key": "X1C", "label": "X1 Carbon", "help": "Enclosed CoreXY, hardened nozzle, lidar", "default": true},
+                {"key": "X1",  "label": "X1",        "help": "Enclosed CoreXY, stainless nozzle, lidar", "default": false},
+                {"key": "X1E", "label": "X1E",       "help": "Enclosed CoreXY, enterprise, air filtration", "default": false},
+                {"key": "P1S", "label": "P1S",       "help": "Enclosed CoreXY, no lidar", "default": false},
+                {"key": "P1P", "label": "P1P",       "help": "Open-frame CoreXY, no enclosure", "default": false},
+                {"key": "A1",  "label": "A1",        "help": "i3 gantry, 256mm bed", "default": false},
+                {"key": "A1M", "label": "A1 Mini",   "help": "i3 gantry, 180mm bed", "default": false}
+            ]
+        },
+        {
+            "id": "filaments",
+            "title": "Optional Filaments",
+            "help": "Core filaments (PLA, PETG, ABS) are always generated. Toggle the specialty filaments you use.",
+            "type": "toggles",
+            "config_key": "OPTIONAL_FILAMENTS",
+            "columns": 2,
+            "options": [
+                {"key": "PLA Silk", "label": "PLA Silk", "help": "Shimmer PLA - own process profile (low accel)", "default": true},
+                {"key": "PLA Wood", "label": "PLA Wood", "help": "Wood-fill PLA - uses PLA process, low volumetric speed", "default": false},
+                {"key": "PLA-CF",   "label": "PLA-CF",   "help": "Carbon fiber PLA - uses PLA process, needs hardened nozzle", "default": false},
+                {"key": "ASA",      "label": "ASA",      "help": "UV-resistant ABS alternative - enclosure required", "default": false},
+                {"key": "TPU",      "label": "TPU",      "help": "Flexible - own process profile (very slow)", "default": false},
+                {"key": "PVA",      "label": "PVA",      "help": "Dissolvable support interface - requires AMS", "default": true},
+                {"key": "BVOH",     "label": "BVOH",     "help": "Dissolvable support - better than PVA, works with PETG, requires AMS", "default": false}
+            ]
+        },
+        {
+            "id": "output",
+            "title": "Output & Options",
+            "help": "Where to write the generated profiles and how to run.",
+            "type": "fields",
+            "fields": [
+                {
+                    "key": "output_mode",
+                    "type": "choice",
+                    "label": "Write profiles to",
+                    "help": "'OrcaSlicer config' writes into your live OrcaSlicer user profiles (a timestamped backup is always taken first). 'Custom folder' writes a standalone copy and never touches OrcaSlicer.",
+                    "default": "orcaslicer",
+                    "choices": [
+                        {"value": "orcaslicer", "label": "OrcaSlicer config (live)"},
+                        {"value": "custom",     "label": "Custom folder…"}
+                    ]
+                },
+                {
+                    "key": "output_dir",
+                    "type": "directory",
+                    "label": "Custom output folder",
+                    "help": "Folder to write the process / machine / filament subfolders into.",
+                    "default": "",
+                    "visible_when": {"field": "output_mode", "equals": "custom"}
+                },
+                {
+                    "key": "do_clean",
+                    "type": "bool",
+                    "label": "Clean existing generated profiles first",
+                    "help": "Delete all previously generated 'B' profiles before writing. A backup is always taken first. Use this for a full reset.",
+                    "default": false
+                },
+                {
+                    "key": "dry_run",
+                    "type": "bool",
+                    "label": "Dry run (preview only - write nothing)",
+                    "help": "Run the full generation and report what would happen without writing or deleting any files.",
+                    "default": false
+                }
+            ]
+        }
+    ]
+}

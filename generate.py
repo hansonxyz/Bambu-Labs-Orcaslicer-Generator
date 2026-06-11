@@ -32,6 +32,24 @@ from copy import deepcopy
 from pathlib import Path
 
 
+def _bundle_root() -> Path:
+    """Directory of read-only bundled assets (gcode JSON, gui_schema.json).
+    Under PyInstaller this is the unpacked bundle (sys._MEIPASS); running from
+    source it is the directory of this script."""
+    if getattr(sys, "frozen", False):
+        return Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
+    return Path(__file__).parent
+
+
+def _app_dir() -> Path:
+    """Directory for writable user state (config.json, backups/). Under
+    PyInstaller this is the folder containing the executable, so state persists
+    next to the app between runs; running from source it is the script dir."""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).parent
+    return Path(__file__).parent
+
+
 # #############################################################################
 #
 #  ***** USER CONFIGURATION *****
@@ -98,7 +116,7 @@ OPTIONAL_FILAMENTS = {
 # #############################################################################
 
 # Load config.json overrides if present
-_CONFIG_FILE = Path(__file__).parent / "config.json"
+_CONFIG_FILE = _app_dir() / "config.json"
 if _CONFIG_FILE.exists():
     with open(_CONFIG_FILE, "r", encoding="utf-8") as _f:
         _config = json.load(_f)
@@ -518,7 +536,7 @@ MACHINE_DIR = ORCA_DIR / "user" / "default" / "machine"
 FILAMENT_DIR = ORCA_DIR / "user" / "default" / "filament"
 FILAMENT_BASE_SUBDIR = FILAMENT_DIR / "base"
 ORCA_CONF_PATH = ORCA_DIR / "OrcaSlicer.conf"
-BACKUP_DIR = Path(__file__).parent / "backups"
+BACKUP_DIR = _app_dir() / "backups"
 ORCA_PROFILE_VERSION = "1.10.0.35"
 
 
@@ -738,7 +756,13 @@ ALL_PRINTERS = {
 }
 
 # Active printers dict (filtered by ENABLED_PRINTERS)
-PRINTERS = {k: v for k, v in ALL_PRINTERS.items() if ENABLED_PRINTERS.get(k, False)}
+def _build_printers():
+    """Build the active printers dict from ALL_PRINTERS filtered by the
+    current ENABLED_PRINTERS toggles. Rebuilt by run_generation() when the
+    GUI (or any caller) changes the enabled set after import."""
+    return {k: v for k, v in ALL_PRINTERS.items() if ENABLED_PRINTERS.get(k, False)}
+
+PRINTERS = _build_printers()
 
 NOZZLE_SIZES = [0.2, 0.4, 0.6, 0.8]
 
@@ -1198,10 +1222,17 @@ OPTIONAL_MATERIAL_MODES = {
 }
 
 # Build active material modes from core + enabled optionals
-MATERIAL_MODES = dict(CORE_MATERIAL_MODES)
-for mode_name, (mode_dict, opt_key) in OPTIONAL_MATERIAL_MODES.items():
-    if opt_key is None or OPTIONAL_FILAMENTS.get(opt_key, False):
-        MATERIAL_MODES[mode_name] = mode_dict
+def _build_material_modes():
+    """Build the active material-mode registry: core modes plus any optional
+    modes whose OPTIONAL_FILAMENTS toggle is enabled. Rebuilt by
+    run_generation() when a caller changes the optional-filament set."""
+    modes = dict(CORE_MATERIAL_MODES)
+    for mode_name, (mode_dict, opt_key) in OPTIONAL_MATERIAL_MODES.items():
+        if opt_key is None or OPTIONAL_FILAMENTS.get(opt_key, False):
+            modes[mode_name] = mode_dict
+    return modes
+
+MATERIAL_MODES = _build_material_modes()
 
 # =============================================================================
 # FILAMENT PROFILES
@@ -1742,10 +1773,17 @@ _OPTIONAL_FILAMENTS = {
 }
 
 # Build active registry from core + enabled optionals
-FILAMENT_REGISTRY = dict(_CORE_FILAMENTS)
-for name, (data, parent, printers, opt_key) in _OPTIONAL_FILAMENTS.items():
-    if OPTIONAL_FILAMENTS.get(opt_key, False):
-        FILAMENT_REGISTRY[name] = (data, parent, printers)
+def _build_filament_registry():
+    """Build the active filament registry: core filaments plus any optional
+    filaments whose OPTIONAL_FILAMENTS toggle is enabled. Rebuilt by
+    run_generation() when a caller changes the optional-filament set."""
+    registry = dict(_CORE_FILAMENTS)
+    for name, (data, parent, printers, opt_key) in _OPTIONAL_FILAMENTS.items():
+        if OPTIONAL_FILAMENTS.get(opt_key, False):
+            registry[name] = (data, parent, printers)
+    return registry
+
+FILAMENT_REGISTRY = _build_filament_registry()
 
 # A1M z_hop increase (mm) over X1C baseline
 A1M_ZHOP_INCREASE = 0.05
@@ -2211,8 +2249,8 @@ def format_info_file(base_id: str) -> str:
 #
 # Both use OrcaSlicer variables so they work across all nozzle sizes.
 
-BRIAN_X1C_GCODE_FILE = Path(__file__).parent / "brian_x1c_gcode.json"
-BRIAN_A1M_GCODE_FILE = Path(__file__).parent / "brian_a1m_gcode.json"
+BRIAN_X1C_GCODE_FILE = _bundle_root() / "brian_x1c_gcode.json"
+BRIAN_A1M_GCODE_FILE = _bundle_root() / "brian_a1m_gcode.json"
 
 
 def _load_gcode_file(path: Path) -> dict:
@@ -2368,7 +2406,7 @@ def generate_machine_profiles(dry_run: bool = False):
     for printer_key, printer_cfg in PRINTERS.items():
         gcode_filename = printer_cfg["gcode_file"]
         if gcode_filename not in gcode_cache:
-            gcode_path = Path(__file__).parent / gcode_filename
+            gcode_path = _bundle_root() / gcode_filename
             gcode_cache[gcode_filename] = _load_gcode_file(gcode_path)
 
     for printer_key, printer_cfg in PRINTERS.items():
@@ -2605,29 +2643,44 @@ def clean_all_profiles(dry_run: bool = False):
     return cleaned
 
 
-def main():
-    dry_run = "--dry-run" in sys.argv
-    backup_only = "--backup-only" in sys.argv
-    do_clean = "--clean" in sys.argv
-    auto_yes = "--yes" in sys.argv
+def run_generation(enabled_printers=None, optional_filaments=None,
+                   output_dir=None, dry_run=False, do_clean=False,
+                   backup=True, backup_only=False):
+    """Programmatic generation entry point shared by main() and the GUI.
 
-    # Parse --output-dir <path>
-    output_dir = None
-    if "--output-dir" in sys.argv:
-        idx = sys.argv.index("--output-dir")
-        if idx + 1 < len(sys.argv):
-            output_dir = sys.argv[idx + 1]
-        else:
-            print("ERROR: --output-dir requires a path argument")
-            sys.exit(1)
+    enabled_printers / optional_filaments may be dicts (same keys as the
+    module-level ENABLED_PRINTERS / OPTIONAL_FILAMENTS) that override the
+    current config. When provided, every registry derived from them
+    (PRINTERS, MATERIAL_MODES, FILAMENT_REGISTRY) is rebuilt to match before
+    generation runs.
 
-    # Reconfigure paths if output dir specified or to pick up OS detection
+    Progress is written to stdout (so a GUI can capture it). This function is
+    non-interactive: callers are responsible for confirming a destructive
+    do_clean before calling. Raises ValueError when no printers are enabled.
+
+    Returns a dict of result counts: machine, filament, process, total,
+    plus deleted (when do_clean) and backup_only flags.
+    """
+    global PRINTERS, MATERIAL_MODES, FILAMENT_REGISTRY
+
+    if enabled_printers is not None:
+        ENABLED_PRINTERS.update(enabled_printers)
+    if optional_filaments is not None:
+        OPTIONAL_FILAMENTS.update(optional_filaments)
+
+    # Rebuild every registry derived from the user-config dicts so that a
+    # caller changing the config after import takes full effect.
+    PRINTERS = _build_printers()
+    MATERIAL_MODES = _build_material_modes()
+    FILAMENT_REGISTRY = _build_filament_registry()
+
+    # Reconfigure paths (output dir override, or fresh OS detection)
     _setup_paths(output_dir)
 
     enabled = [k for k, v in ENABLED_PRINTERS.items() if v]
 
     print(f"OrcaSlicer Profile Generator ({platform.system()})")
-    print(f"Enabled printers: {', '.join(enabled)}")
+    print(f"Enabled printers: {', '.join(enabled) if enabled else '(none)'}")
     if output_dir:
         print(f"Output dir: {output_dir}")
     else:
@@ -2638,46 +2691,32 @@ def main():
     print()
 
     if not enabled:
-        print("ERROR: No printers enabled. Edit ENABLED_PRINTERS in generate.py.")
-        sys.exit(1)
+        raise ValueError("No printers enabled. Enable at least one printer.")
 
-    # Backup (skip when using --output-dir since we're not touching OrcaSlicer)
-    if not output_dir:
+    # Backup (skip when using output_dir since we're not touching OrcaSlicer)
+    if backup and not output_dir:
         print("Creating backup...")
         create_backup()
         print()
 
     if backup_only:
         print("Backup-only mode. Done.")
-        return
+        return {"machine": 0, "filament": 0, "process": 0, "total": 0,
+                "backup_only": True}
 
     action = "DRY RUN" if dry_run else "Generating"
 
-    # --clean: delete all existing profiles before generating
+    deleted = 0
     if do_clean:
         if dry_run:
             print("[DRY RUN] Would clean all existing profiles...")
             clean_all_profiles(dry_run=True)
             print()
         else:
-            if auto_yes:
-                confirmed = True
-            elif sys.stdin.isatty():
-                resp = input("WARNING: --clean will delete ALL existing Brian/B profiles. Continue? [y/N] ")
-                confirmed = resp.strip().lower() in ("y", "yes")
-            else:
-                print("ERROR: --clean requires interactive confirmation. Pass --yes to skip.")
-                print("       (stdin is not a TTY)")
-                sys.exit(1)
-
-            if confirmed:
-                print("Cleaning all existing profiles...")
-                cleaned = clean_all_profiles(dry_run=False)
-                print(f"  Deleted {cleaned} files.")
-                print()
-            else:
-                print("Clean cancelled.")
-                return
+            print("Cleaning all existing profiles...")
+            deleted = clean_all_profiles(dry_run=False)
+            print(f"  Deleted {deleted} files.")
+            print()
 
     # Generate machine profiles
     print(f"{action} machine profiles: {len(PRINTERS)} printers × {len(NOZZLE_SIZES)} nozzles")
@@ -2697,7 +2736,7 @@ def main():
     print(f"  {'Would generate' if dry_run else 'Generated'} {process_count} process profiles.")
     print()
 
-    # Patch OrcaSlicer.conf global settings (skip with --output-dir)
+    # Patch OrcaSlicer.conf global settings (skip with output_dir)
     if not output_dir:
         print(f"{action} OrcaSlicer.conf tweaks...")
         patch_orca_conf(dry_run=dry_run)
@@ -2705,6 +2744,49 @@ def main():
 
     total = machine_count + process_count
     print(f"Total: {total} profiles + {filament_count} filament updates.")
+
+    return {"machine": machine_count, "filament": filament_count,
+            "process": process_count, "total": total, "deleted": deleted,
+            "backup_only": False}
+
+
+def main():
+    dry_run = "--dry-run" in sys.argv
+    backup_only = "--backup-only" in sys.argv
+    do_clean = "--clean" in sys.argv
+    auto_yes = "--yes" in sys.argv
+
+    # Parse --output-dir <path>
+    output_dir = None
+    if "--output-dir" in sys.argv:
+        idx = sys.argv.index("--output-dir")
+        if idx + 1 < len(sys.argv):
+            output_dir = sys.argv[idx + 1]
+        else:
+            print("ERROR: --output-dir requires a path argument")
+            sys.exit(1)
+
+    # --clean confirmation is interactive and belongs to the CLI, not the
+    # generation engine. Resolve it here before delegating to run_generation.
+    if do_clean and not dry_run:
+        if auto_yes:
+            pass
+        elif sys.stdin.isatty():
+            resp = input("WARNING: --clean will delete ALL existing Brian/B profiles. Continue? [y/N] ")
+            if resp.strip().lower() not in ("y", "yes"):
+                print("Clean cancelled.")
+                return
+        else:
+            print("ERROR: --clean requires interactive confirmation. Pass --yes to skip.")
+            print("       (stdin is not a TTY)")
+            sys.exit(1)
+
+    try:
+        run_generation(output_dir=output_dir, dry_run=dry_run,
+                       do_clean=do_clean, backup_only=backup_only)
+    except ValueError as e:
+        print(f"ERROR: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

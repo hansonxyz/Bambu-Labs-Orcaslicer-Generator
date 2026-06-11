@@ -153,6 +153,43 @@ python generate.py --dry-run
 python generate.py --output-dir ./export
 ```
 
+## Desktop App (GUI)
+
+Prefer not to edit Python? A cross-platform desktop front-end (`gui.py`) exposes
+the same configuration as checkboxes and runs the generator with one click,
+streaming its output into a log pane. Your selections are saved to `config.json`,
+so the GUI and the `python generate.py` CLI stay in sync.
+
+**Run from source:**
+```bash
+pip install -r requirements.txt
+python gui.py
+```
+
+The controls shown in the GUI are not hard-coded — they are defined declaratively
+in `gui_schema.json`. To expose a new printer, filament, or option, add an entry
+to that file; no GUI code changes are needed.
+
+### Building a distributable
+
+The app bundles into a single executable (and, on Windows, an installer) with
+[PyInstaller](https://pyinstaller.org/) and [Inno Setup](https://jrsoftware.org/isinfo.php):
+
+```bash
+pip install -r requirements.txt
+
+# One-file app -> dist/OrcaConfGen[.exe]  (dist/OrcaConfGen.app on macOS)
+pyinstaller --noconfirm OrcaConfGen.spec
+
+# Windows installer (per-user, no admin) -> Output/OrcaConfGen-Setup-<version>.exe
+iscc installer.iss
+```
+
+The installer is per-user, so the app can write `config.json` and `backups/`
+next to its own executable without administrator rights. Tagged pushes (`v*`)
+also build Windows/macOS/Linux artifacts automatically via GitHub Actions
+(`.github/workflows/build.yml`).
+
 ## Backups
 
 Every run (except `--output-dir`) creates a timestamped backup of your existing profiles in the `./backups/` directory before writing anything. If something goes wrong, your previous profiles are preserved.
